@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Project Information -->
+    <name>ProtoLauncher</name>
+    <groupId>net.protolauncher</groupId>
+    <artifactId>protolauncher</artifactId>
+    <version>1.0.0</version>
+
+    <!-- Profiles -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <properties>
+                <build.version>${project.version}</build.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>alpha</id>
+            <properties>
+                <build.version>${project.version}-alpha.${git.total.commit.count}</build.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>snapshot</id>
+            <properties>
+                <build.version>${project.version}-${git.branch}+${git.commit.id.abbrev}</build.version>
+            </properties>
+        </profile>
+    </profiles>
+
+    <!-- Properties -->
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- Build -->
+    <build>
+
+        <!-- Plugins -->
+        <plugins>
+
+            <!-- Git Commit ID Plugin -->
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>5.0.0</version>
+                <executions>
+                    <execution>
+                        <id>fetch-git-information</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.total.commit.count$</includeOnlyProperty>
+                    </includeOnlyProperties>
+                </configuration>
+            </plugin>
+
+        </plugins>
+
+        <!-- Resources -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>maven.properties</include>
+                </includes>
+            </resource>
+        </resources>
+
+    </build>
+
+</project>
