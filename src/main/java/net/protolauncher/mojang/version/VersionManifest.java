@@ -1,52 +1,28 @@
 package net.protolauncher.mojang.version;
 
 import com.google.gson.Gson;
-import net.protolauncher.util.ISavable;
 import net.protolauncher.util.Network;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.List;
 
 /**
  * Represents the <a href="https://minecraft.fandom.com/wiki/Version_manifest.json">Mojang Version Manifest</a>
  */
-public class VersionManifest implements ISavable {
-
-    // Savable Variables
-    private static Path path;
-    private static Gson gson;
+public class VersionManifest {
 
     // JSON Properties
     private Latest latest;
     private List<VersionInfo> versions;
 
-    // Singleton
-    private static VersionManifest instance;
-
     // Suppress default constructor
     private VersionManifest() { }
-
-    // Savable Implementation
-    @Override
-    public Type getType() {
-        return VersionManifest.class;
-    }
-
-    @Override
-    public Gson getGson() {
-        return gson;
-    }
-
-    @Override
-    public Path getPath() {
-        return path;
-    }
 
     // Getters
     public VersionInfo getLatestRelease() {
@@ -103,23 +79,21 @@ public class VersionManifest implements ISavable {
         URL manifestUrl,
         Instant nextUpdate
     ) throws IOException {
-        VersionManifest.path = path;
-        VersionManifest.gson = gson;
-
+        VersionManifest instance;
         boolean updated;
         if (!Files.exists(path) || Instant.now().isAfter(nextUpdate)) {
             // Download manifest
             String manifestString = Network.stringify(Network.fetch(manifestUrl));
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
+            Files.writeString(path, manifestString, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             // Parse manifest
             instance = gson.fromJson(manifestString, VersionManifest.class);
-            instance.save();
             updated = true;
         } else {
-            if (instance == null) {
-                instance = new VersionManifest();
-            }
-            instance.load();
+            instance = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
             updated = false;
         }
         return new LoadResult(instance, updated);
