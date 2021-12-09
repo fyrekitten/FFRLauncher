@@ -14,6 +14,25 @@ public class Validation {
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
     /**
+     * Validates a file against the given sha1.
+     *
+     * @param path The file to check.
+     * @param sha1 The sha1 to compare against.
+     * @return <code>true</code> if the file exists and matches the given sha1, otherwise <code>false</code>.
+     * @throws Exception Thrown if validating the file fails, usually due to sha1 creation.
+     */
+    public static boolean validate(Path path, String sha1) throws Exception {
+        // Check file
+        if (!Files.exists(path)) {
+            return false;
+        }
+
+        // Generate sha1
+        String filesha1 = Validation.createSha1(path);
+        return filesha1.equalsIgnoreCase(sha1);
+    }
+
+    /**
      * Creates a SHA1 code from the given path.
      *
      * @param path The file to generate a SHA1 from.

@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  * Represents a list of CLI arguments required to launch the client.
- * Stems from the Mojang Minecraft Client File.
+ * Stems from the {@link Version}.
  * <br/><br/>
  * Due to Mojang refusing to follow basic JSON standards, they mixed types in the JSON array,
  * so we need a custom type adapter for the entire class. Thanks, Mojang!

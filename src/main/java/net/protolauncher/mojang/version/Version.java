@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.util.Network;
-import net.protolauncher.util.Validation;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -22,7 +21,6 @@ public class Version {
 
     // JSON Properties
     private VersionArguments arguments;
-    @Nullable
     private Artifact assetIndex; // This is not the same as the AssetIndex object, it's an artifact linking to it.
     private String assets; // This is not a list of assets, it's the identifier for the type of asset index.
     @Nullable
@@ -49,7 +47,6 @@ public class Version {
     public VersionArguments getArguments() {
         return arguments;
     }
-    @Nullable
     public Artifact getAssetIndex() {
         return assetIndex;
     }
@@ -100,6 +97,7 @@ public class Version {
     /**
      * Resolves the folder for this game version from the given parent folder.
      *
+     * @param id The id of the game version.
      * @param parent The parent folder containing other game versions.
      * @return The path for the folder of this game version.
      */
@@ -111,6 +109,7 @@ public class Version {
      * Resolves the file for this game version from the given parent folder,
      * usually obtained from {@link Version#resolveFolderPath(String, Path)}.
      *
+     * @param id The id of the game version.
      * @param parent The parent folder, presumably gotten from {@link Version#resolveFolderPath(String, Path)}.
      * @return The path for the file of this game version.
      */
@@ -176,26 +175,6 @@ public class Version {
             instance = gson.fromJson(Files.newBufferedReader(path), Version.class);
         }
         return instance;
-    }
-
-    /**
-     * Validates that this version file matches the given SHA1.
-     *
-     * @param folderLocation The folder location for all other version files.
-     * @param sha1 The SHA1 to compare the file against.
-     * @return <code>true</code> if the file exists and matches the given SHA1, otherwise <code>false</code>
-     * @throws Exception Thrown if validating the file fails, usually due to SHA1 creation.
-     */
-    public boolean validate(Path folderLocation, String sha1) throws Exception {
-        // Check file
-        Path path = resolveFilePath(id, resolveFolderPath(id, folderLocation));
-        if (!Files.exists(path)) {
-            return false;
-        }
-
-        // Generate sha1
-        String filesha1 = Validation.createSha1(path);
-        return filesha1.equalsIgnoreCase(sha1);
     }
 
     /**

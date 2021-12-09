@@ -2,6 +2,7 @@ package net.protolauncher.mojang.library;
 
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.rule.Rule;
+import net.protolauncher.mojang.version.Version;
 import net.protolauncher.util.SystemInfo;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +11,7 @@ import java.util.List;
 
 /**
  * Represents a library for a game version.
- * Stems from the Mojang Minecraft Client File.
+ * Stems from the {@link Version}.
  */
 public class Library {
 

@@ -4,7 +4,7 @@ import java.util.Date;
 
 /**
  * Represents a basic amount of information about a game version.
- * Stems from the Mojang Version Manifest.
+ * Stems from the {@link VersionManifest}.
  */
 public class VersionInfo {
 

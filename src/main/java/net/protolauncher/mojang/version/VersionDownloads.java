@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Represents a list of client/server downloads for a game version.
- * Stems from the Mojang Minecraft Client File.
+ * Stems from the {@link Version}.
  */
 public class VersionDownloads {
 
