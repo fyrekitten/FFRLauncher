@@ -89,21 +89,22 @@ public class VersionManifest implements ISavable {
      * Loads the manifest from the given url, updating the stored file if necessary.
      * This is the only way to create a version manifest.
      *
-     * @param pathIn The location of the version manifest file.
-     * @param gsonIn The gson to use for parsing the version manifest.
+     * @param path The location of the version manifest file.
+     * @param gson The gson to use for parsing the version manifest.
      * @param manifestUrl The url used if fetching the version manifest is necessary.
      * @param nextUpdate The next time that the version manifest needs to be updated.
-     * @return The loaded version manifest.
+     * @return A new {@link VersionManifest.LoadResult} containing the loaded version manifest
+     *         and a boolean indicating whether it was updated or not.
      * @throws IOException Thrown if there was an exception while trying to load.
      */
     public static VersionManifest.LoadResult load(
-        Path pathIn,
-        Gson gsonIn,
+        Path path,
+        Gson gson,
         URL manifestUrl,
         Instant nextUpdate
     ) throws IOException {
-        path = pathIn;
-        gson = gsonIn;
+        VersionManifest.path = path;
+        VersionManifest.gson = gson;
 
         boolean updated;
         if (!Files.exists(path) || Instant.now().isAfter(nextUpdate)) {
