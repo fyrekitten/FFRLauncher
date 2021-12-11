@@ -4,10 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.protolauncher.api.Config.FileLocation;
 import net.protolauncher.function.DownloadProgressConsumer;
+import net.protolauncher.function.StepInfoConsumer;
 import net.protolauncher.function.StepProgressConsumer;
 import net.protolauncher.gson.DurationTypeAdapter;
 import net.protolauncher.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
+import net.protolauncher.mojang.library.Library;
+import net.protolauncher.mojang.rule.Action;
+import net.protolauncher.mojang.rule.Rule;
 import net.protolauncher.mojang.version.Version;
 import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionManifest;
@@ -18,6 +22,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -25,6 +30,10 @@ import java.net.URL;
 import java.nio.file.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -113,11 +122,11 @@ public class ProtoLauncher {
     /**
      * Loads the {@link VersionManifest}, downloading it if necessary.
      *
-     * @param downloadProgressConsumer Called to show the download progress.
+     * @param downloadProgress Called to show the download progress.
      * @return The loaded {@link VersionManifest}.
      * @throws IOException Thrown if something goes wrong loading or downloading the version manifest.
      */
-    public VersionManifest loadVersionManifest(DownloadProgressConsumer downloadProgressConsumer) throws IOException {
+    public VersionManifest loadVersionManifest(DownloadProgressConsumer downloadProgress) throws IOException {
         URL url = config.getEndpoints().getVersionManifest();
         Path path = FileLocation.VERSION_MANIFEST;
 
@@ -128,7 +137,7 @@ public class ProtoLauncher {
                 Files.createDirectories(path.getParent());
             }
             long size = Network.fetchFileSize(url);
-            Network.download(url, path, progress -> downloadProgressConsumer.accept(size, progress));
+            Network.download(url, path, progress -> downloadProgress.accept(size, progress));
             config.setLastManifestUpdate(Instant.now());
             this.saveConfig();
         }
@@ -144,11 +153,11 @@ public class ProtoLauncher {
      * Downloads the version file from the given {@link VersionInfo}.
      *
      * @param info The information to download the version file from.
-     * @param downloadProgressConsumer Called to show the download progress.
+     * @param downloadProgress Called to show the download progress.
      * @return The loaded {@link Version}.
      * @throws IOException Thrown if something goes wrong loading or downloading the version.
      */
-    public Version downloadVersion(VersionInfo info, DownloadProgressConsumer downloadProgressConsumer) throws IOException {
+    public Version downloadVersion(VersionInfo info, DownloadProgressConsumer downloadProgress) throws IOException {
         String id = info.getId();
         Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
         Path file = folder.resolve(id + ".json");
@@ -160,7 +169,7 @@ public class ProtoLauncher {
             }
             URL url = new URL(info.getUrl());
             long size = Network.fetchFileSize(url);
-            Network.download(url, file, progress -> downloadProgressConsumer.accept(size, progress));
+            Network.download(url, file, progress -> downloadProgress.accept(size, progress));
         }
 
         // Validate
@@ -177,10 +186,10 @@ public class ProtoLauncher {
      * Downloads the client JAR file for the given version.
      *
      * @param version The {@link Version} to download the client for.
-     * @param downloadProgressConsumer Called to show the download progress.
+     * @param downloadProgress Called to show the download progress.
      * @throws IOException Thrown if something goes wrong downloading the client.
      */
-    public void downloadVersionClient(Version version, DownloadProgressConsumer downloadProgressConsumer) throws IOException {
+    public void downloadVersionClient(Version version, DownloadProgressConsumer downloadProgress) throws IOException {
         String id = version.getId();
         Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
         Path file = folder.resolve(id + ".jar");
@@ -193,7 +202,7 @@ public class ProtoLauncher {
             }
             URL url = new URL(artifact.getUrl());
             long size = artifact.getSize();
-            Network.download(url, file, progress -> downloadProgressConsumer.accept(size, progress));
+            Network.download(url, file, progress -> downloadProgress.accept(size, progress));
         }
 
         // Validate
@@ -207,12 +216,12 @@ public class ProtoLauncher {
      * Downloads Java 8 for the appropriate system platform.
      *
      * @param stepProgress The progress of the 'steps' of the download (download, then extraction).
-     * @param downloadProgressConsumer Called to show the download progress.
+     * @param downloadProgress Called to show the download progress.
      * @return The {@link Path} to the Java executable.
      * @throws IOException Thrown if something goes wrong downloading Java.
      * @throws ArchiveException Thrown if something goes wrong during the extraction process.
      */
-    public Path downloadJava(StepProgressConsumer stepProgress, DownloadProgressConsumer downloadProgressConsumer) throws IOException, ArchiveException {
+    public Path downloadJava(StepProgressConsumer stepProgress, DownloadProgressConsumer downloadProgress) throws IOException, ArchiveException {
         final int totalSteps = 2;
         int currentStep = 0;
         stepProgress.accept(totalSteps, currentStep++);
@@ -246,7 +255,7 @@ public class ProtoLauncher {
         Path compressedFile = folder.resolve("jre-1.8" + (isTarFile ? ".tar.gz" : ".zip"));
         if (!Files.exists(compressedFile)) {
             long size = Network.fetchFileSize(url);
-            Network.download(url, compressedFile, progress -> downloadProgressConsumer.accept(size, progress));
+            Network.download(url, compressedFile, progress -> downloadProgress.accept(size, progress));
         }
         stepProgress.accept(totalSteps, currentStep++);
 
@@ -301,6 +310,157 @@ public class ProtoLauncher {
 
         // Return the java path
         return javaPath;
+    }
+
+    public List<Library> downloadLibraries(Version version, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
+        Path versionFolder = FileLocation.VERSIONS_FOLDER.resolve(version.getId() + "/");
+        Path nativesFolder = versionFolder.resolve("natives/");
+        Files.createDirectories(nativesFolder);
+
+        // Filter libraries
+        List<Library> libraries = version.getLibraries().stream().filter(library -> {
+            // If there are no rules, return true
+            if (library.getRules() == null || library.getRules().size() == 0) {
+                return true;
+
+            // If the rules resolve to allow, return true
+            } else if (Rule.determine(library.getRules().toArray(Rule[]::new)) == Action.ALLOW) {
+                return true;
+
+            // Otherwise, return false
+            } else {
+                return false;
+            }
+        }).toList();
+
+        // Main download loop
+        final int totalSteps = libraries.size();
+        int currentStep = 0;
+        for (Library library : libraries) {
+            // Update progress
+            stepProgress.accept(totalSteps, currentStep++);
+            stepInfo.accept(library.getNameDetails()[1]);
+
+            // Don't try and download libraries that don't have downloads
+            if (library.getDownloads() == null) {
+                continue;
+            }
+
+            // Get library artifact
+            Artifact jarArtifact = library.getDownloads().getArtifact();
+            if (jarArtifact != null) {
+                assert jarArtifact.getPath() != null; // This won't be null for a library jar
+
+                // Download if it does not already exist
+                Path jarPath = FileLocation.LIBRARIES_FOLDER.resolve(jarArtifact.getPath());
+                if (!Files.exists(jarPath)) {
+                    Files.createDirectories(jarPath.getParent());
+                    URL url = new URL(jarArtifact.getUrl());
+                    long size = jarArtifact.getSize();
+                    Network.download(url, jarPath, progress -> downloadProgress.accept(size, progress));
+                }
+
+                // Validate
+                if (config.shouldValidate() && !Validation.validate(jarPath, jarArtifact.getSha1())) {
+                    // TODO: Retry download.
+                    throw new IOException("Validation failed!");
+                }
+            }
+
+            // Download and extract natives if they exist
+            Artifact natArtifact = library.getTargetedNatives();
+            if (natArtifact != null) {
+                assert natArtifact.getPath() != null; // This won't be null for a native
+                assert natArtifact.getUrl() != null; // This won't be null for a native
+
+                // Download if it does not already exist
+                Path natPath = FileLocation.LIBRARIES_FOLDER.resolve(natArtifact.getPath());
+                if (!Files.exists(natPath)) {
+                    Files.createDirectories(natPath.getParent());
+                    URL url = new URL(natArtifact.getUrl());
+                    long size = natArtifact.getSize();
+                    Network.download(url, natPath, progress -> downloadProgress.accept(size, progress));
+                }
+
+                // Validate
+                if (config.shouldValidate() && !Validation.validate(natPath, natArtifact.getSha1())) {
+                    // TODO: Retry download.
+                    throw new IOException("Validation failed!");
+                }
+
+                // Extract the native
+                this.extractNative(natPath, nativesFolder, library.getExtract() != null ? library.getExtract().get("exclude") : null);
+            }
+        }
+
+        // Filter the libraries to exclude any native-only libraries (so it only returns 'true' libraries)
+        return libraries.stream().filter(library -> {
+            return library.getDownloads() != null && library.getDownloads().getArtifact() != null;
+        }).toList();
+    }
+
+    /**
+     * Takes in a source jar file and extracts it to the destination path avoiding the exclusions list.
+     *
+     * @param source The source jar file
+     * @param destination The destination directory
+     * @param exclusions A list of file exclusions
+     */
+    private void extractNative(Path source, Path destination, @Nullable String[] exclusions) throws IOException {
+        // Prepare jar file
+        JarFile jar = new JarFile(source.toFile());
+        Enumeration<JarEntry> entries = jar.entries();
+
+        // Main extract loop
+        while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+
+            // Ignore non-dll files
+            if (!entry.getName().endsWith(".dll")) {
+                continue;
+            }
+
+            // Handle edge case where lwjgl.dll doesn't work with MC 1.16 if we don't remove the 64-bit version on a 32-bit PC
+            if (SystemInfo.OS_ARCH.equals("x86") && entry.getName().equals("lwjgl.dll")) {
+                continue;
+            }
+
+            // Create entry file location
+            Path file = Paths.get(destination.toString(), entry.getName());
+
+            // If the native already exists, ignore it and continue on
+            if (Files.exists(file)) {
+                continue;
+            }
+
+            // Process exclusions
+            if (exclusions != null && exclusions.length > 0) {
+                boolean exclude = false;
+                for (String exclusion : exclusions) {
+                    Path excludedFile = Path.of(exclusion);
+
+                    // Compare the excluded filename to the jar file name and if they're equal don't extract
+                    if (file.getFileName().equals(excludedFile.getFileName())) {
+                        exclude = true;
+                        break;
+
+                        // Compare the excluded file parent's folder name to the jar file's folder name and if they're equal don't extract
+                    } else if (file.getParent() != null && file.getParent().getFileName().equals(excludedFile.getFileName())) {
+                        exclude = true;
+                        break;
+                    }
+                }
+                if (exclude) {
+                    continue;
+                }
+            }
+
+            // Copy native to destination
+            Files.copy(jar.getInputStream(entry), file);
+        }
+
+        // Close jar file
+        jar.close();
     }
 
 }
