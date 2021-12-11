@@ -3,12 +3,15 @@ package net.protolauncher.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.protolauncher.api.Config.FileLocation;
-import net.protolauncher.exception.NotInitializedException;
 import net.protolauncher.function.DownloadProgressConsumer;
 import net.protolauncher.gson.DurationTypeAdapter;
 import net.protolauncher.gson.InstantTypeAdapter;
+import net.protolauncher.mojang.Artifact;
+import net.protolauncher.mojang.version.Version;
+import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionManifest;
 import net.protolauncher.util.Network;
+import net.protolauncher.util.Validation;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,23 +23,6 @@ import java.time.Instant;
 
 /**
  * The ProtoLauncher API. The structure of this class may seem weird to some, so here is some explanation:
- * <br/><br/>
- * Many methods in this class depend on other instance variables of the API after it has been created.
- * Normally, people would initialize this in the constructor and all would be fine and dandy. The issue is,
- * ProtoLauncher was designed for user feedback, and JavaFX and the interface will always load before the API.
- * To be able to provide loading feedback and loading steps, the API must be loaded incrementally. To provide
- * a flexible implementation, each step of the loading process is provided as a method within the API. This means
- * that some instance variables may not exist if somebody accidentally calls an API before it has been loaded.
- * As such, there is the {@link NotInitializedException} which will be thrown if a variable has not been
- * initialized, but an API method was called requiring that variable.
- * <br/><br/>
- * Please ensure to initialize the API before using any of its methods. The current initialization process is
- * as follows:
- * <ol>
- *     <li><code>{@link ProtoLauncher#loadConfig()}</code></li>
- *     <li><code>{@link ProtoLauncher#loadVersionManifest(DownloadProgressConsumer)}</code></li>
- * </ol>
- * <strong>Consider every instance variable in this API nullable.</strong>
  */
 public class ProtoLauncher {
 
@@ -63,6 +49,9 @@ public class ProtoLauncher {
 
         // Create gson
         gson = builder.create();
+
+        // Create new configuration
+        config = new Config();
     }
 
     // Getters
@@ -77,9 +66,11 @@ public class ProtoLauncher {
     }
 
     /**
-     * Loads the configuration, creating a new one if one does not already exist.
+     * Loads the {@link Config}, creating a new one if one does not already exist.
+     *
+     * @return The loaded {@link Config}.
      */
-    public void loadConfig() throws IOException {
+    public Config loadConfig() throws IOException {
         Path path = FileLocation.CONFIG;
 
         // Check if one exists, and if not, generate a new one
@@ -87,7 +78,6 @@ public class ProtoLauncher {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
-            config = new Config();
             this.saveConfig();
         } else {
             config = gson.fromJson(Files.newBufferedReader(path), Config.class);
@@ -99,6 +89,9 @@ public class ProtoLauncher {
             gsonBuilder.setPrettyPrinting();
         }
         gson = gsonBuilder.create();
+
+        // Return the config
+        return config;
     }
 
     /**
@@ -112,15 +105,13 @@ public class ProtoLauncher {
     }
 
     /**
-     * Loads the Mojang Version Manifest, downloading it if necessary.
+     * Loads the {@link VersionManifest}, downloading it if necessary.
      *
      * @param downloadProgressConsumer Called to show the download progress.
+     * @return The loaded {@link VersionManifest}.
      * @throws IOException Thrown if something goes wrong loading or downloading the version manifest.
      */
-    public void loadVersionManifest(DownloadProgressConsumer downloadProgressConsumer) throws IOException {
-        if (config == null) {
-            throw new NotInitializedException();
-        }
+    public VersionManifest loadVersionManifest(DownloadProgressConsumer downloadProgressConsumer) throws IOException {
         URL url = config.getEndpoints().getVersionManifest();
         Path path = FileLocation.VERSION_MANIFEST;
 
@@ -138,6 +129,72 @@ public class ProtoLauncher {
 
         // Load the manifest
         versionManifest = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
+
+        // Return the manifest
+        return versionManifest;
+    }
+
+    /**
+     * Downloads the version file from the given {@link VersionInfo}.
+     *
+     * @param info The information to download the version file from.
+     * @param downloadProgressConsumer Called to show the download progress.
+     * @return The loaded {@link Version}.
+     * @throws IOException Thrown if something goes wrong loading or downloading the version.
+     */
+    public Version downloadVersion(VersionInfo info, DownloadProgressConsumer downloadProgressConsumer) throws IOException {
+        String id = info.getId();
+        Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
+        Path file = folder.resolve(id + ".json");
+
+        // Check if it needs to be downloaded and, if it does, then download it
+        if (!Files.exists(file)) {
+            if (file.getParent() != null) {
+                Files.createDirectories(file.getParent());
+            }
+            URL url = new URL(info.getUrl());
+            long size = Network.fetchFileSize(url);
+            Network.download(url, file, progress -> downloadProgressConsumer.accept(size, progress));
+        }
+
+        // Validate
+        if (config.shouldValidate() && !Validation.validate(file, info.getSha1())) {
+            // TODO: Retry download.
+            throw new IOException("Validation failed!");
+        }
+
+        // Load version
+        return gson.fromJson(Files.newBufferedReader(file), Version.class);
+    }
+
+    /**
+     * Downloads the client JAR file for the given version.
+     *
+     * @param version The {@link Version} to download the client for.
+     * @param downloadProgressConsumer Called to show the download progress.
+     * @throws IOException Thrown if something goes wrong downloading the client.
+     */
+    public void downloadVersionClient(Version version, DownloadProgressConsumer downloadProgressConsumer) throws IOException {
+        String id = version.getId();
+        Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
+        Path file = folder.resolve(id + ".jar");
+        Artifact artifact = version.getDownloads().getClient();
+
+        // Check if it needs to be downloaded and, if it does, then download it
+        if (!Files.exists(file)) {
+            if (file.getParent() != null) {
+                Files.createDirectories(file.getParent());
+            }
+            URL url = new URL(artifact.getUrl());
+            long size = artifact.getSize();
+            Network.download(url, file, progress -> downloadProgressConsumer.accept(size, progress));
+        }
+
+        // Validate
+        if (config.shouldValidate() && !Validation.validate(file, artifact.getSha1())) {
+            // TODO: Retry download.
+            throw new IOException("Validation failed!");
+        }
     }
 
 }

@@ -1,9 +1,11 @@
 package net.protolauncher.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Provides various utilities regarding file validation.
@@ -19,9 +21,9 @@ public class Validation {
      * @param path The file to check.
      * @param sha1 The sha1 to compare against.
      * @return <code>true</code> if the file exists and matches the given sha1, otherwise <code>false</code>.
-     * @throws Exception Thrown if validating the file fails, usually due to sha1 creation.
+     * @throws IOException Thrown if validating the file fails, usually due to sha1 creation.
      */
-    public static boolean validate(Path path, String sha1) throws Exception {
+    public static boolean validate(Path path, String sha1) throws IOException {
         // Check file
         if (!Files.exists(path)) {
             return false;
@@ -37,10 +39,17 @@ public class Validation {
      *
      * @param path The file to generate a SHA1 from.
      * @return The SHA1 as a string.
-     * @throws Exception Thrown if any part of the SHA1 process goes wrong.
+     * @throws IOException Thrown if any part of the SHA1 process goes wrong.
      */
-    public static String createSha1(Path path) throws Exception  {
-        MessageDigest digest = MessageDigest.getInstance("SHA-1");
+    public static String createSha1(Path path) throws IOException  {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return null;
+        }
         InputStream fis = Files.newInputStream(path);
         int n = 0;
         byte[] buffer = new byte[8192];

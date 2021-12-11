@@ -204,7 +204,7 @@ public class Config {
                 this.microsoftApi = new MicrosoftApi();
                 this.assetApi = new URL("https://resources.download.minecraft.net/");
                 this.avatarApi = new URL("https://minotar.net/helm/%uuid%/256");
-                this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json");
                 this.java8Win32 = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x86-32_windows_hotspot_8u292b10.zip");
                 this.java8Win64 = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x64_windows_hotspot_8u292b10.zip");
                 this.java8Mac = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x64_mac_hotspot_8u292b10.tar.gz");
