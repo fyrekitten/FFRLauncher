@@ -25,6 +25,7 @@ import net.protolauncher.mojang.rule.Rule;
 import net.protolauncher.mojang.version.Version;
 import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionManifest;
+import net.protolauncher.mojang.version.VersionType;
 import net.protolauncher.util.Network;
 import net.protolauncher.util.SystemInfo;
 import net.protolauncher.util.Validation;
@@ -40,9 +41,7 @@ import java.net.URL;
 import java.nio.file.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -60,8 +59,11 @@ public class ProtoLauncher {
     private Gson gson;
     private Config config;
     private List<User> users;
+    private HashMap<String, List<Profile>> profiles;
 
     // Mojang Variables
+    @Nullable
+    private VersionManifest versionManifest;
     private Yggdrasil yggdrasil;
     private MicrosoftAuth microsoftAuth;
 
@@ -87,6 +89,7 @@ public class ProtoLauncher {
 
         // Prepare the lists
         users = new ArrayList<>();
+        profiles = new HashMap<>();
 
         // Prepare yggdrasil
         yggdrasil = new Yggdrasil(gson, config.getEndpoints().getYggdrasilApi().toString(), config.getClientToken());
@@ -111,6 +114,10 @@ public class ProtoLauncher {
     }
     public Gson getGson() {
         return gson;
+    }
+    @Nullable
+    public VersionManifest getVersionManifest() {
+        return versionManifest;
     }
     public Yggdrasil getYggdrasil() {
         return yggdrasil;
@@ -209,8 +216,18 @@ public class ProtoLauncher {
     }
 
     /**
+     * Attempts to get a user by the provided uuid.
+     * @param uuid The UUID to get.
+     * @return The {@link User} or null if not found.
+     */
+    @Nullable
+    public User getUser(String uuid) {
+        return users.stream().filter(user -> user.getUuid().equals(uuid)).findFirst().orElse(null);
+    }
+
+    /**
      * Searches the user list to find the user marked as the current user via the configuration.
-     * @return The current {@link User}.
+     * @return The current {@link User} or null if they do not exist.
      */
     @Nullable
     public User getCurrentUser() {
@@ -218,7 +235,7 @@ public class ProtoLauncher {
         if (currentUserUuid == null) {
             return null;
         } else {
-            return users.stream().filter(user -> user.getUuid().equals(currentUserUuid)).findFirst().orElse(null);
+            return this.getUser(currentUserUuid);
         }
     }
 
@@ -234,6 +251,12 @@ public class ProtoLauncher {
         // Add user
         users.add(user);
         this.saveUsers();
+
+        // Make default profiles
+        if (makeDefaultProfiles) {
+            this.createLatestReleaseProfile(user);
+            this.createLatestSnapshotProfile(user);
+        }
 
         // Switch user
         this.switchUser(user);
@@ -348,8 +371,21 @@ public class ProtoLauncher {
         // Otherwise, switch users
         if (user == null) {
             config.setCurrentUserUuid(null);
+            this.switchProfile(null);
         } else {
             config.setCurrentUserUuid(user.getUuid());
+
+            // Find last launched profile
+            List<Profile> userProfiles = this.getProfiles(user.getUuid());
+            if (userProfiles != null) {
+                Profile profile = userProfiles.stream().max(Comparator.comparing(Profile::getLastLaunched)).orElse(null);
+
+                // Switch to profile
+                this.switchProfile(profile);
+
+                // Check latest profiles
+                this.checkLatest(user.getUuid());
+            }
         }
 
         // Save config
@@ -379,13 +415,292 @@ public class ProtoLauncher {
     }
 
     /**
+     * Loads the map of {@link Profile}s, saving an empty map if the file does not already exist.
+     *
+     * @throws IOException Thrown if loading the profiles map goes horribly wrong.
+     */
+    public void loadProfiles() throws IOException {
+        Path path = FileLocation.PROFILES;
+
+        // Check if it exists, and if not, make a new list
+        if (!Files.exists(path)) {
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
+            this.saveProfiles();
+        } else {
+            profiles = gson.fromJson(Files.newBufferedReader(path), new TypeToken<HashMap<String, List<Profile>>>() { }.getType());
+        }
+    }
+
+    /**
+     * Saves the profiles map, presumably after somebody's changed it.
+     *
+     * @throws IOException Thrown if saving the profiles map goes horribly wrong.
+     */
+    public void saveProfiles() throws IOException {
+        Path path = FileLocation.PROFILES;
+        Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    /**
+     * Returns the total size of all profiles, adding each user's list together.
+     *
+     * @return The size of all profiles.
+     */
+    public int getProfileCount() {
+        return profiles.values().stream().map(List::size).reduce(0, Integer::sum);
+    }
+
+    /**
+     * Gets a list of profiles by the provided owner.
+     *
+     * @param owner The UUID of the {@link User} whose profiles to get.
+     * @return A list of {@link Profile}s owned by the given user, or null if there are none.
+     */
+    @Nullable
+    public List<Profile> getProfiles(String owner) {
+        if (!profiles.containsKey(owner)) {
+            return null;
+        } else {
+            return profiles.get(owner);
+        }
+    }
+
+    /**
+     * Gets a profile by the provided owner and the profile UUID.
+     *
+     * @param owner The UUID of the {@link User} who owns this profile.
+     * @param uuid The UUID of the profile.
+     * @return The {@link Profile} or null if not found.
+     */
+    public Profile getProfile(String owner, String uuid) {
+        List<Profile> userProfiles = this.getProfiles(owner);
+        if (userProfiles == null) {
+            return null;
+        }
+        return userProfiles.stream().filter(profile -> profile.getUuid().equals(uuid)).findFirst().orElse(null);
+    }
+
+    /**
+     * Searches the profiles map to find the profile marked as the current profile via the configuration.
+     * If there is not a current user, will short-circut and immediately return null.
+     *
+     * @return The current {@link Profile} or null if it does not exist.
+     */
+    @Nullable
+    public Profile getCurrentProfile() {
+        String currentUserUuid = config.getCurrentUserUuid();
+        if (currentUserUuid == null) {
+            return null;
+        }
+        String currentProfileUuid = config.getCurrentProfileUuid();
+        if (currentProfileUuid == null) {
+            return null;
+        }
+        return this.getProfile(currentUserUuid, currentProfileUuid);
+    }
+
+    /**
+     * Adds the profile to the launcher and switches to it.
+     * @param profile The {@link Profile} to add.
+     * @throws IOException Thrown if something goes wrong saving or switching the profile.
+     */
+    public void addProfile(Profile profile) throws IOException {
+        // Get existing profiles
+        List<Profile> userProfiles = this.getProfiles(profile.getOwner());
+        if (userProfiles == null) {
+            userProfiles = new ArrayList<>();
+        }
+
+        // Add to profiles
+        userProfiles.add(0, profile);
+        profiles.put(profile.getOwner(), userProfiles);
+        this.saveProfiles();
+
+        // Switch profile
+        this.switchProfile(profile);
+    }
+
+    /**
+     * Switches the launcher from one current profile to another.
+     *
+     * @param profile The profile to switch to.
+     * @throws IOException Thrown if something goes wrong switching profiles.
+     */
+    public void switchProfile(@Nullable Profile profile) throws IOException {
+        // If the profile is null, remove the current profile
+        // Otherwise, switch profiles
+        if (profile == null) {
+            config.setCurrentProfileUuid(null);
+        } else {
+            config.setCurrentProfileUuid(profile.getUuid());
+        }
+
+        // Save config
+        this.saveConfig();
+    }
+
+    /**
+     * Removes the given profile from the launcher and switches to the next possible profile.
+     *
+     * @param profile The profile to remove.
+     * @throws IOException Thrown if removing the profile or switching the current profile goes wrong.
+     */
+    public void removeProfile(Profile profile) throws IOException {
+        // Remove the profile
+        List<Profile> userProfiles = this.getProfiles(profile.getOwner());
+        if (userProfiles == null) {
+            return;
+        }
+        userProfiles.removeIf(p -> p.getUuid().equals(profile.getUuid()));
+        if (userProfiles.size() == 0) {
+            profiles.remove(profile.getOwner());
+        } else {
+            profiles.put(profile.getOwner(), userProfiles);
+        }
+        this.saveProfiles();
+
+        // Switch to the next possible profile
+        if (userProfiles.size() > 0) {
+            this.switchProfile(userProfiles.get(0));
+        } else {
+            this.switchProfile(null);
+        }
+    }
+
+    /**
+     * Creates and saves the 'Latest Release' profile for the given user.
+     *
+     * @param owner The {@link User} that should own this profile.
+     * @throws IOException Thrown if adding the profile goes wrong.
+     * @return The created {@link Profile} or null if it failed.
+     */
+    @Nullable
+    public Profile createLatestReleaseProfile(User owner) throws IOException {
+        // We can't create it if the version manifest hasn't been loaded
+        if (versionManifest == null) {
+            return null;
+        }
+
+        // Attempt to find an existing profile
+        List<Profile> userProfiles = this.getProfiles(owner.getUuid());
+        if (userProfiles != null) {
+            Profile existing = userProfiles.stream().filter(profile ->
+                profile.getVersion().getType() == VersionType.RELEASE && profile.getVersion().isLatest()
+            ).findFirst().orElse(null);
+            if (existing != null) {
+                return existing;
+            }
+        }
+
+        // Create profile
+        Profile profile = new Profile("Latest Release", versionManifest.getLatestRelease(), owner);
+        profile.setVersion(profile.getVersion().setLatest(true));
+
+        // Add profile
+        this.addProfile(profile);
+
+        // Return the profile
+        return profile;
+    }
+
+    /**
+     * Creates and saves the 'Latest Snapshot' profile for the given user.
+     *
+     * @param owner The {@link User} that should own this profile.
+     * @throws IOException Thrown if adding the profile goes wrong.
+     * @return The created {@link Profile} or null if it failed.
+     */
+    @Nullable
+    public Profile createLatestSnapshotProfile(User owner) throws IOException {
+        // We can't create it if the version manifest hasn't been loaded
+        if (versionManifest == null) {
+            return null;
+        }
+
+        // Attempt to find an existing profile
+        List<Profile> userProfiles = this.getProfiles(owner.getUuid());
+        if (userProfiles != null) {
+            Profile existing = userProfiles.stream().filter(profile ->
+                profile.getVersion().getType() == VersionType.SNAPSHOT && profile.getVersion().isLatest()
+            ).findFirst().orElse(null);
+            if (existing != null) {
+                return existing;
+            }
+        }
+
+        // Create profile
+        Profile profile = new Profile("Latest Snapshot", versionManifest.getLatestSnapshot(), owner);
+        profile.setVersion(profile.getVersion().setLatest(true));
+
+        // Add profile
+        this.addProfile(profile);
+
+        // Return the profile
+        return profile;
+    }
+
+    /**
+     * Checks all the 'latest' profiles and updates their MCV if it is outdated for the given user.
+     * Requires the version manifest to be loaded. See {@link ProtoLauncher#loadVersionManifest(DownloadProgressConsumer)}.
+     *
+     * @param owner The UUID of the {@link User} to check the latest profiles for.
+     * @throws IOException Thrown if checking the latest profiles fails.
+     */
+    public void checkLatest(String owner) throws IOException {
+        // We can't check if the version manifest hasn't been loaded
+        if (versionManifest == null) {
+            return;
+        }
+
+        // Get profiles
+        List<Profile> userProfiles = this.getProfiles(owner);
+        if (userProfiles == null) {
+            return;
+        }
+
+        // Check loop
+        boolean updated = false;
+        for (int i = 0; i < userProfiles.size(); i++) {
+            Profile profile = userProfiles.get(i);
+            Profile.Version ver = profile.getVersion();
+            if (!ver.isLatest()) {
+                continue;
+            }
+
+            // Check type and update accordingly
+            if (ver.getType() == VersionType.RELEASE) {
+                VersionInfo latestReleaseInfo = versionManifest.getLatestRelease();
+                if (!ver.getMinecraft().equals(latestReleaseInfo.getId())) {
+                    updated = true;
+                    profile.setVersion(ver.setVersion(latestReleaseInfo));
+                    userProfiles.set(i, profile);
+                }
+            } else if (ver.getType() == VersionType.SNAPSHOT) {
+                VersionInfo latestSnapshotInfo = versionManifest.getLatestSnapshot();
+                if (!ver.getMinecraft().equals(latestSnapshotInfo.getId())) {
+                    updated = true;
+                    profile.setVersion(ver.setVersion(latestSnapshotInfo));
+                    userProfiles.set(i, profile);
+                }
+            }
+        }
+
+        // Save if updated
+        if (updated) {
+            profiles.put(owner, userProfiles);
+            this.saveProfiles();
+        }
+    }
+
+    /**
      * Loads the {@link VersionManifest}, downloading it if necessary.
      *
      * @param downloadProgress Called to show the download progress.
-     * @return The loaded {@link VersionManifest}.
      * @throws IOException Thrown if something goes wrong loading or downloading the version manifest.
      */
-    public VersionManifest loadVersionManifest(DownloadProgressConsumer downloadProgress) throws IOException {
+    public void loadVersionManifest(DownloadProgressConsumer downloadProgress) throws IOException {
         URL url = config.getEndpoints().getVersionManifest();
         Path path = FileLocation.VERSION_MANIFEST;
 
@@ -401,8 +716,8 @@ public class ProtoLauncher {
             this.saveConfig();
         }
 
-        // Return the manifest
-        return gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
+        // Parse the manifest
+        versionManifest = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
     }
 
     /**
@@ -839,10 +1154,22 @@ public class ProtoLauncher {
         return index;
     }
 
-    // TODO: Profiles, users...
-    public Process launch(User user, Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
+    /**
+     * Launches Minecraft.
+     *
+     * @param user The {@link User} to launch with.
+     * @param profile The {@link Profile} that is being launched.
+     * @param version The {@link Version} to launch as provided by {@link ProtoLauncher#downloadVersion(VersionInfo, DownloadProgressConsumer)}
+     * @param libraries The {@link Library} array as provided by {@link ProtoLauncher#downloadLibraries(Version, StepProgressConsumer, StepInfoConsumer, DownloadProgressConsumer)}
+     * @param assetIndex The {@link AssetIndex} as provided by {@link ProtoLauncher#downloadAssets(Version, Path, StepProgressConsumer, StepInfoConsumer, DownloadProgressConsumer)}
+     * @param javaPath The (optional) Java path as provided by {@link ProtoLauncher#downloadJava(StepProgressConsumer, DownloadProgressConsumer)}
+     * @param launcherVersion The version of the launcher.
+     * @return A new {@link Process} for Minecraft.
+     * @throws IOException Thrown if something goes terribly wrong.
+     */
+    public Process launch(User user, Profile profile, Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
         // Prepare run directory
-        Path runFolder = Path.of("test/").toAbsolutePath();
+        Path runFolder = Path.of(profile.getPath()).toAbsolutePath();
         Files.createDirectories(runFolder);
 
         // Prepare jar location
@@ -899,6 +1226,19 @@ public class ProtoLauncher {
         arguments = arguments.replace("${launcher_name}", "ProtoLauncher");
         arguments = arguments.replace("${launcher_version}", launcherVersion);
         arguments = arguments.replace("${classpath}", '"' + String.join(";", classpath) + '"');
+
+        // Add resolution arguments
+        if (profile.getLaunchSettings().getGameResolutionX() != -1) {
+            arguments += " --width=" + profile.getLaunchSettings().getGameResolutionX();
+        }
+        if (profile.getLaunchSettings().getGameResolutionY() != -1) {
+            arguments += " --height=" + profile.getLaunchSettings().getGameResolutionY();
+        }
+
+        // Add JVM arguments
+        if (profile.getLaunchSettings().getJvmArguments() != null) {
+            arguments = profile.getLaunchSettings().getJvmArguments() + " " + arguments;
+        }
 
         // Prepare the launch command
         String command;
