@@ -104,6 +104,13 @@
             <version>17</version>
         </dependency>
 
+        <!-- JUnique -->
+        <dependency>
+            <groupId>de.huxhorn.lilith</groupId>
+            <artifactId>de.huxhorn.lilith.3rdparty.junique</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
         <!-- Annotations -->
         <dependency>
             <groupId>org.jetbrains</groupId>
