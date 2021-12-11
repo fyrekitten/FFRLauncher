@@ -4,6 +4,7 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Consumer;
 
 /**
  * Provides various utilities regarding networking and handling connections.
@@ -104,6 +106,48 @@ public class Network {
      */
     public static InputStream fetch(URL url) throws IOException {
         return send(createConnection(url, "GET", false), true);
+    }
+
+    /**
+     * Sends a HEAD request to the given URL and if the responses contain a Content-Length header,
+     * returns the value of it.
+     *
+     * @param url The url to get the headers for.
+     * @return The value of the Content-Length header, or null if there is not one.
+     */
+    public static Long fetchFileSize(URL url) throws IOException {
+        return Long.parseLong(createConnection(url, "HEAD", false).getHeaderField("Content-Length"));
+    }
+
+    /**
+     * Fetches a file from the given url and copies the stream to the given path,
+     * replacing any existing files and giving a progress update during the download.
+     * <br/><br/>
+     * Essentially the same as {@link Network#download(URL, Path)} but with a progress update consumer.
+     *
+     * @param url The url of the file.
+     * @param path The path to write the file to.
+     * @param progressUpdate Called every time there is a progress update in downloading the file.
+     * @throws IOException Thrown if the response code is errored (>= 400)
+     * @see Network#fetch(URL)
+     */
+    public static void download(URL url, Path path, Consumer<Long> progressUpdate) throws IOException {
+        // Handle "replace existing files"
+        Files.deleteIfExists(path);
+
+        // Fetch streams
+        InputStream in = fetch(url);
+        OutputStream out = Files.newOutputStream(path);
+
+        // Perform transfer (equivalent to InputStream#transferTo)
+        long transferred = 0;
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = in.read(buffer, 0, 8192)) >= 0) {
+            out.write(buffer, 0, read);
+            transferred += read;
+            progressUpdate.accept(transferred);
+        }
     }
 
     /**
