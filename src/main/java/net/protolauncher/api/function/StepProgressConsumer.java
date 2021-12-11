@@ -1,4 +1,4 @@
-package net.protolauncher.function;
+package net.protolauncher.api.function;
 
 import java.util.function.BiConsumer;
 

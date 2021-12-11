@@ -6,11 +6,11 @@ import com.google.gson.reflect.TypeToken;
 import net.protolauncher.api.Config.Endpoints;
 import net.protolauncher.api.Config.FileLocation;
 import net.protolauncher.api.User.MicrosoftInfo;
-import net.protolauncher.function.DownloadProgressConsumer;
-import net.protolauncher.function.StepInfoConsumer;
-import net.protolauncher.function.StepProgressConsumer;
-import net.protolauncher.gson.DurationTypeAdapter;
-import net.protolauncher.gson.InstantTypeAdapter;
+import net.protolauncher.api.function.DownloadProgressConsumer;
+import net.protolauncher.api.function.StepInfoConsumer;
+import net.protolauncher.api.function.StepProgressConsumer;
+import net.protolauncher.api.gson.DurationTypeAdapter;
+import net.protolauncher.api.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
@@ -250,8 +250,8 @@ public class ProtoLauncher {
 
         // Make default profiles
         if (makeDefaultProfiles) {
-            this.createLatestReleaseProfile(user);
             this.createLatestSnapshotProfile(user);
+            this.createLatestReleaseProfile(user);
         }
 
         // Switch user

@@ -1,4 +1,4 @@
-package net.protolauncher.gson;
+package net.protolauncher.api.gson;
 
 import com.google.gson.*;
 
