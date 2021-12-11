@@ -12,6 +12,7 @@ import net.protolauncher.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
+import net.protolauncher.mojang.auth.Yggdrasil;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.rule.Action;
 import net.protolauncher.mojang.rule.Rule;
@@ -55,7 +56,7 @@ public class ProtoLauncher {
     private List<User> users;
 
     // Mojang Variables
-    private VersionManifest versionManifest;
+    private Yggdrasil yggdrasil;
 
     /**
      * Constructs a new ProtoLauncher API as well as the GSON builder for it.
@@ -79,6 +80,9 @@ public class ProtoLauncher {
 
         // Prepare the lists
         users = new ArrayList<>();
+
+        // Prepare yggdrasil
+        yggdrasil = new Yggdrasil(gson, config.getEndpoints().getYggdrasilApi().toString(), config.getClientToken());
     }
 
     // Getters
@@ -88,17 +92,13 @@ public class ProtoLauncher {
     public Gson getGson() {
         return gson;
     }
-    public VersionManifest getVersionManifest() {
-        return versionManifest;
-    }
 
     /**
      * Loads the {@link Config}, creating a new one if one does not already exist.
      *
-     * @return The loaded {@link Config}.
      * @throws IOException Thrown if loading the configuration goes horribly wrong.
      */
-    public Config loadConfig() throws IOException {
+    public void loadConfig() throws IOException {
         Path path = FileLocation.CONFIG;
 
         // Check if one exists, and if not, generate a new one
@@ -118,8 +118,10 @@ public class ProtoLauncher {
         }
         gson = gsonBuilder.create();
 
-        // Return the config
-        return config;
+        // Update Yggdrasil
+        yggdrasil.setGson(gson);
+        yggdrasil.setApi(config.getEndpoints().getYggdrasilApi().toString());
+        yggdrasil.setClientToken(config.getClientToken());
     }
 
     /**
@@ -184,6 +186,94 @@ public class ProtoLauncher {
     }
 
     /**
+     * Adds the user to the launcher and switches to it.
+     *
+     * @param user The {@link User} to add.
+     * @param makeDefaultProfiles Whether to create the default profiles for this user or not.
+     * @throws IOException Thrown if something goes wrong saving or switching the user.
+     */
+    // TODO: Make default profiles.
+    public void addUser(User user, boolean makeDefaultProfiles) throws IOException {
+        // Add user
+        users.add(user);
+        this.saveUsers();
+
+        // Switch user
+        this.switchUser(user);
+    }
+
+    /**
+     * Logs a user in using the provided username and password, then adds them to the launcher and switches to them.
+     *
+     * @param username The username.
+     * @param password The password.
+     * @return A new {@link User}.
+     * @throws IOException Thrown if anything goes wrong in the login, creation, or switching process.
+     */
+    public User addUserMojang(String username, String password) throws IOException {
+        // Fetch Yggdrasil response
+        Yggdrasil.Response response = yggdrasil.authenticate(username, password);
+        if (response.getError() != null) {
+            throw new IOException(response.getErrorMessage());
+        }
+
+        // Parse properties
+        String properties;
+        if (response.getUser() != null && response.getUser().getProperties() != null){
+            properties = yggdrasil.deserializeProperties(response.getUser().getProperties());
+        } else {
+            properties = "{}";
+        }
+
+        // Create and add a new user
+        User user = new User(response.getSelectedProfile().getName(), response.getSelectedProfile().getId(), properties, response.getAccessToken());
+        this.addUser(user, true);
+
+        // Return the user
+        return user;
+    }
+
+    /**
+     * Switches the launcher from one current user to another.
+     *
+     * @param user The user to switch to.
+     * @throws IOException Thrown if something goes wrong switching users.
+     */
+    // TODO: Switch profile.
+    public void switchUser(@Nullable User user) throws IOException {
+        // If the user is null, remove the current user
+        // Otherwise, switch users
+        if (user == null) {
+            config.setCurrentUserUuid(null);
+        } else {
+            config.setCurrentUserUuid(user.getUuid());
+        }
+
+        // Save config
+        this.saveConfig();
+    }
+
+    /**
+     * Removes the given user from the launcher and switches to the next possible user.
+     *
+     * @param user The user to remove.
+     * @throws IOException Thrown if removing the user or switching the current user goes wrong.
+     */
+    public void removeUser(User user) throws IOException {
+        // Remove the user
+        yggdrasil.invalidate(user.getAccessToken());
+        users.remove(user);
+        this.saveUsers();
+
+        // Switch to the next possible user
+        if (users.size() > 0) {
+            this.switchUser(users.get(0));
+        } else {
+            this.switchUser(null);
+        }
+    }
+
+    /**
      * Loads the {@link VersionManifest}, downloading it if necessary.
      *
      * @param downloadProgress Called to show the download progress.
@@ -206,11 +296,8 @@ public class ProtoLauncher {
             this.saveConfig();
         }
 
-        // Load the manifest
-        versionManifest = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
-
         // Return the manifest
-        return versionManifest;
+        return gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
     }
 
     /**

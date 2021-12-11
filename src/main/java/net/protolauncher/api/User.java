@@ -37,12 +37,13 @@ public class User {
      * Constructs a new user with the provided username, uuid, and access token.
      * @param username The user's username.
      * @param uuid The user's uuid.
+     * @param userProperties The user properties object for launching 1.7.
      * @param accessToken The user's access token.
      */
-    public User(String username, String uuid, String accessToken) {
+    public User(String username, String uuid, String userProperties, String accessToken) {
         this.username = username;
         this.uuid = uuid;
-        this.userProperties = "";
+        this.userProperties = userProperties;
         this.accessToken = accessToken;
         this.microsoftInfo = null;
     }
