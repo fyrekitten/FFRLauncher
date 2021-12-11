@@ -39,6 +39,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 
+// TODO: Massive todo! I need to go through everything again after I've implemented users and profiles to ensure
+//       I didn't miss anything relating to them, as some of the code while copying over I omitted so I could get a test running.
+
 /**
  * The ProtoLauncher API. The structure of this class may seem weird to some, so here is some explanation:
  */
@@ -323,7 +326,7 @@ public class ProtoLauncher {
      * @param stepInfo Called to provide the name of each library.
      * @param downloadProgress Called to show download progress.
      * @return A filtered and downloaded list of {@link Library}'s.
-     * @throws IOException Thrown if something goes wrong downloading any library.
+     * @throws IOException Thrown if something goes wrong downloading any file operation or download.
      */
     public List<Library> downloadLibraries(Version version, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
         Path versionFolder = FileLocation.VERSIONS_FOLDER.resolve(version.getId() + "/");
@@ -476,6 +479,17 @@ public class ProtoLauncher {
         jar.close();
     }
 
+    /**
+     * Downloads all the assets for the given {@link Version}.
+     *
+     * @param version The {@link Version} to download assets for.
+     * @param profileFolder The {@link Path} to the profile where the game is to be run for legacy assets.
+     * @param stepProgress Called for every asset to give the total amount of steps.
+     * @param stepInfo Called to provide the name of each asset.
+     * @param downloadProgress Called to show download progress.
+     * @return The {@link AssetIndex} for this {@link Version}.
+     * @throws IOException Thrown if something goes wrong for any file operation or download.
+     */
     public AssetIndex downloadAssets(Version version, Path profileFolder, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
         Path assetsFolder = FileLocation.ASSETS_FOLDER;
         Path objectsFolder = assetsFolder.resolve("objects/");
@@ -564,6 +578,7 @@ public class ProtoLauncher {
             Artifact artifact = version.getLogging().getClient().getFile();
             Path logFilePath = logConfigsFolder.resolve(artifact.getId());
             if (!Files.exists(logFilePath)) {
+                Files.createDirectories(logFilePath.getParent());
                 URL url = new URL(artifact.getUrl());
                 long size = artifact.getSize();
                 Network.download(url, logFilePath, progress -> downloadProgress.accept(size, progress));
@@ -572,6 +587,84 @@ public class ProtoLauncher {
 
         // Return the index
         return index;
+    }
+
+    // TODO: Profiles, users...
+    public Process launch(Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
+        // Prepare run directory
+        Path runFolder = Path.of("test/").toAbsolutePath();
+        Files.createDirectories(runFolder);
+
+        // Prepare jar location
+        Path versionFolder = FileLocation.VERSIONS_FOLDER.resolve(version.getId() + "/");
+        Path versionJarFile = versionFolder.resolve(version.getId() + ".jar");
+
+        // Prepare classpath
+        Path librariesFolder = FileLocation.LIBRARIES_FOLDER;
+        String[] classpath = new String[libraries.size() + 1];
+        for (int i = 0; i < classpath.length - 1; i++) {
+            Library library = libraries.get(i);
+            String path;
+            if (library.getDownloads() == null || library.getDownloads().getArtifact() == null || library.getDownloads().getArtifact().getPath() == null) {
+                // Construct path manually.
+                String[] details = library.getNameDetails();
+                path = details[0].replace(".", "/") + "/" + details[1] + "/" + details[1] + "-" + details[2] + ".jar";
+            } else {
+                path = library.getDownloads().getArtifact().getPath();
+            }
+            classpath[i] = librariesFolder.resolve(path).toAbsolutePath().toString();
+        }
+        classpath[classpath.length - 1] = versionJarFile.toAbsolutePath().toString();
+
+        // Prepare launch arguments
+        String arguments = "";
+        if (version.getMinecraftArguments() != null) {
+            arguments += "-Djava.library.path=${natives_directory} -cp ${classpath}" + ' ' + version.getMainClass() + ' ' + version.getMinecraftArguments();
+        } else {
+            arguments += version.getArguments().getJvm() + ' ' + version.getMainClass() + ' ' + version.getArguments().getGame();
+        }
+
+        // Replace argument variables
+//        arguments = arguments.replace("${auth_username}", user.getUsername());
+//        arguments = arguments.replace("${auth_player_name}", user.getUsername());
+        arguments = arguments.replace("${auth_username}", "FireControl1847");
+        arguments = arguments.replace("${auth_player_name}", "FireControl1847");
+        arguments = arguments.replace("${version_name}", version.getId());
+        arguments = arguments.replace("${game_directory}", '"' + runFolder.toString() + '"');
+        arguments = arguments.replace("${assets_root}", '"' + FileLocation.ASSETS_FOLDER.toAbsolutePath().toString() + '"');
+        assert version.getAssetIndex().getId() != null; // This won't be null for an asset index
+        arguments = arguments.replace("${assets_index_name}", version.getAssetIndex().getId());
+        if (Boolean.TRUE.equals(assetIndex.mapToResources())) {
+            arguments = arguments.replace("${game_assets}", '"' + runFolder.resolve("assets/").toAbsolutePath().toString() + '"');
+        } else if (Boolean.TRUE.equals(assetIndex.isVirtual())) {
+            arguments = arguments.replace("${game_assets}", '"' + FileLocation.ASSETS_FOLDER.resolve("virtual/legacy/").toString() + '"');
+        } else {
+            arguments = arguments.replace("${game_assets}", '"' + FileLocation.ASSETS_FOLDER.toAbsolutePath().toString() + '"');
+        }
+//        arguments = arguments.replace("${auth_uuid}", user.getUuid());
+        arguments = arguments.replace("${auth_uuid}", "ddbbe2edd3a6478ea16aa9944c4e0a70");
+//        arguments = arguments.replace("${auth_access_token}", user.getAccessToken());
+//        arguments = arguments.replace("${auth_session}", "token:" + user.getAccessToken() + ":" + user.getUuid());
+        arguments = arguments.replace("${user_type}", "mojang");
+//        arguments = arguments.replace("${user_properties}", user.getUserProperties());
+        arguments = arguments.replace("${version_type}", version.getType().toString().toLowerCase());
+        arguments = arguments.replace("${natives_directory}", '"' + versionFolder.resolve("natives/").toAbsolutePath().toString() + '"');
+        arguments = arguments.replace("${launcher_name}", "ProtoLauncher");
+        arguments = arguments.replace("${launcher_version}", launcherVersion);
+        arguments = arguments.replace("${classpath}", '"' + String.join(";", classpath) + '"');
+
+        // Prepare the launch command
+        String command;
+        if (javaPath == null) {
+            command = "java -Xdiag " + arguments;
+        } else {
+            command = javaPath + " -Xdiag " + arguments;
+        }
+
+        // Launch the game
+        ProcessBuilder builder = new ProcessBuilder(command.split(" "));
+        builder.directory(runFolder.toFile());
+        return builder.inheritIO().start();
     }
 
 }
