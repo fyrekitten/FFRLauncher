@@ -2,6 +2,7 @@ package net.protolauncher.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import net.protolauncher.api.Config.FileLocation;
 import net.protolauncher.function.DownloadProgressConsumer;
 import net.protolauncher.function.StepInfoConsumer;
@@ -32,6 +33,7 @@ import java.net.URL;
 import java.nio.file.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
@@ -50,6 +52,7 @@ public class ProtoLauncher {
     // Launcher Variables
     private Gson gson;
     private Config config;
+    private List<User> users;
 
     // Mojang Variables
     private VersionManifest versionManifest;
@@ -73,6 +76,9 @@ public class ProtoLauncher {
 
         // Create new configuration
         config = new Config();
+
+        // Prepare the lists
+        users = new ArrayList<>();
     }
 
     // Getters
@@ -90,6 +96,7 @@ public class ProtoLauncher {
      * Loads the {@link Config}, creating a new one if one does not already exist.
      *
      * @return The loaded {@link Config}.
+     * @throws IOException Thrown if loading the configuration goes horribly wrong.
      */
     public Config loadConfig() throws IOException {
         Path path = FileLocation.CONFIG;
@@ -123,6 +130,57 @@ public class ProtoLauncher {
     public void saveConfig() throws IOException {
         Path path = FileLocation.CONFIG;
         Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    /**
+     * Loads the list of {@link User}s, saving an empty list if the file does not already exist.
+     *
+     * @throws IOException Thrown if loading the users list goes horribly wrong.
+     */
+    public void loadUsers() throws IOException {
+        Path path = FileLocation.USERS;
+
+        // Check if it exists, and if not, make a new list
+        if (!Files.exists(path)) {
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
+            this.saveUsers();
+        } else {
+            users = gson.fromJson(Files.newBufferedReader(path), new TypeToken<List<User>>() { }.getType());
+        }
+    }
+
+    /**
+     * Saves the users list, presumably after somebody's changed it.
+     *
+     * @throws IOException Thrown if saving the users list goes horribly wrong.
+     */
+    public void saveUsers() throws IOException {
+        Path path = FileLocation.USERS;
+        Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    /**
+     * Returns the size of the user's array.
+     * @return The size of the user's array.
+     */
+    public int getUserCount() {
+        return users.size();
+    }
+
+    /**
+     * Searches the user list to find the user marked as the current user via the configuration.
+     * @return The current {@link User}.
+     */
+    @Nullable
+    public User getCurrentUser() {
+        String currentUserUuid = config.getCurrentUserUuid();
+        if (currentUserUuid == null) {
+            return null;
+        } else {
+            return users.stream().filter(user -> user.getUuid().equals(currentUserUuid)).findFirst().orElse(null);
+        }
     }
 
     /**
@@ -590,7 +648,7 @@ public class ProtoLauncher {
     }
 
     // TODO: Profiles, users...
-    public Process launch(Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
+    public Process launch(User user, Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
         // Prepare run directory
         Path runFolder = Path.of("test/").toAbsolutePath();
         Files.createDirectories(runFolder);
@@ -625,10 +683,8 @@ public class ProtoLauncher {
         }
 
         // Replace argument variables
-//        arguments = arguments.replace("${auth_username}", user.getUsername());
-//        arguments = arguments.replace("${auth_player_name}", user.getUsername());
-        arguments = arguments.replace("${auth_username}", "FireControl1847");
-        arguments = arguments.replace("${auth_player_name}", "FireControl1847");
+        arguments = arguments.replace("${auth_username}", user.getUsername());
+        arguments = arguments.replace("${auth_player_name}", user.getUsername());
         arguments = arguments.replace("${version_name}", version.getId());
         arguments = arguments.replace("${game_directory}", '"' + runFolder.toString() + '"');
         arguments = arguments.replace("${assets_root}", '"' + FileLocation.ASSETS_FOLDER.toAbsolutePath().toString() + '"');
@@ -641,12 +697,11 @@ public class ProtoLauncher {
         } else {
             arguments = arguments.replace("${game_assets}", '"' + FileLocation.ASSETS_FOLDER.toAbsolutePath().toString() + '"');
         }
-//        arguments = arguments.replace("${auth_uuid}", user.getUuid());
-        arguments = arguments.replace("${auth_uuid}", "ddbbe2edd3a6478ea16aa9944c4e0a70");
-//        arguments = arguments.replace("${auth_access_token}", user.getAccessToken());
-//        arguments = arguments.replace("${auth_session}", "token:" + user.getAccessToken() + ":" + user.getUuid());
+        arguments = arguments.replace("${auth_uuid}", user.getUuid());
+        arguments = arguments.replace("${auth_access_token}", user.getAccessToken());
+        arguments = arguments.replace("${auth_session}", "token:" + user.getAccessToken() + ":" + user.getUuid());
         arguments = arguments.replace("${user_type}", "mojang");
-//        arguments = arguments.replace("${user_properties}", user.getUserProperties());
+        arguments = arguments.replace("${user_properties}", user.getUserProperties());
         arguments = arguments.replace("${version_type}", version.getType().toString().toLowerCase());
         arguments = arguments.replace("${natives_directory}", '"' + versionFolder.resolve("natives/").toAbsolutePath().toString() + '"');
         arguments = arguments.replace("${launcher_name}", "ProtoLauncher");
