@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.protolauncher.api.Config.FileLocation;
 import net.protolauncher.function.DownloadProgressConsumer;
+import net.protolauncher.function.StepProgressConsumer;
 import net.protolauncher.gson.DurationTypeAdapter;
 import net.protolauncher.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
@@ -11,15 +12,20 @@ import net.protolauncher.mojang.version.Version;
 import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionManifest;
 import net.protolauncher.util.Network;
+import net.protolauncher.util.SystemInfo;
 import net.protolauncher.util.Validation;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.zip.GZIPInputStream;
 
 /**
  * The ProtoLauncher API. The structure of this class may seem weird to some, so here is some explanation:
@@ -195,6 +201,106 @@ public class ProtoLauncher {
             // TODO: Retry download.
             throw new IOException("Validation failed!");
         }
+    }
+
+    /**
+     * Downloads Java 8 for the appropriate system platform.
+     *
+     * @param stepProgress The progress of the 'steps' of the download (download, then extraction).
+     * @param downloadProgressConsumer Called to show the download progress.
+     * @return The {@link Path} to the Java executable.
+     * @throws IOException Thrown if something goes wrong downloading Java.
+     * @throws ArchiveException Thrown if something goes wrong during the extraction process.
+     */
+    public Path downloadJava(StepProgressConsumer stepProgress, DownloadProgressConsumer downloadProgressConsumer) throws IOException, ArchiveException {
+        final int totalSteps = 2;
+        int currentStep = 0;
+        stepProgress.accept(totalSteps, currentStep++);
+        Path folder = FileLocation.JAVA_8_FOLDER;
+        Files.createDirectories(folder);
+
+        // Fetch correct URL
+        URL url;
+        boolean isTarFile = false;
+        switch (SystemInfo.OS_NAME) {
+            case "windows":
+                if (SystemInfo.OS_BIT.equals("32")) {
+                    url = config.getEndpoints().getJava8Win32();
+                } else {
+                    url = config.getEndpoints().getJava8Win64();
+                }
+                break;
+            case "mac":
+                url = config.getEndpoints().getJava8Mac();
+                isTarFile = true;
+                break;
+            case "linux":
+                url = config.getEndpoints().getJava8Linux();
+                isTarFile = true;
+                break;
+            default:
+                throw new IOException("Unrecognized systems do not support auto-download of legacy Java.");
+        }
+
+        // Download file
+        Path compressedFile = folder.resolve("jre-1.8" + (isTarFile ? ".tar.gz" : ".zip"));
+        if (!Files.exists(compressedFile)) {
+            long size = Network.fetchFileSize(url);
+            Network.download(url, compressedFile, progress -> downloadProgressConsumer.accept(size, progress));
+        }
+        stepProgress.accept(totalSteps, currentStep++);
+
+        // Extract file
+        Path javaPath;
+        if (SystemInfo.OS_NAME.equals("windows")) {
+            javaPath = folder.resolve("bin/java.exe");
+        } else {
+            javaPath = folder.resolve("bin/java");
+        }
+        if (!Files.exists(javaPath)) {
+            // Create archive stream
+            ArchiveInputStream archive;
+            if (isTarFile) {
+                // Extract tar from tar.gz
+                Path tarPath = folder.resolve("jre-1.8.tar");
+                if (!Files.exists(tarPath)) {
+                    GZIPInputStream gzipInputStream = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(compressedFile)));
+                    Files.copy(gzipInputStream, tarPath);
+                    gzipInputStream.close();
+                }
+
+                // Create archive
+                archive = new ArchiveStreamFactory().createArchiveInputStream("tar", new BufferedInputStream(Files.newInputStream(tarPath)));
+            } else {
+                // Create archive
+                archive = new ArchiveStreamFactory().createArchiveInputStream("zip", new BufferedInputStream(Files.newInputStream(compressedFile)));
+            }
+
+            // Extract files
+            ArchiveEntry entry;
+            while ((entry = archive.getNextEntry()) != null) {
+
+                // Extract file
+                String path = entry.getName().substring(entry.getName().indexOf('/') + 1);
+                Path entryPath = folder.resolve(path);
+                if (!entry.isDirectory()) {
+                    Files.createDirectories(entryPath.getParent());
+                    Files.copy(archive, entryPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+
+            // Close archive
+            archive.close();
+        }
+
+        // Determine if the java file still doesn't exist, return if it still exists
+        if (!Files.exists(javaPath)) {
+            throw new IOException("Unable to find java location!");
+        }
+        stepProgress.accept(totalSteps, currentStep++);
+
+        // Return the java path
+        return javaPath;
     }
 
 }

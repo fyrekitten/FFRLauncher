@@ -205,10 +205,10 @@ public class Config {
                 this.assetApi = new URL("https://resources.download.minecraft.net/");
                 this.avatarApi = new URL("https://minotar.net/helm/%uuid%/256");
                 this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json");
-                this.java8Win32 = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x86-32_windows_hotspot_8u292b10.zip");
-                this.java8Win64 = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x64_windows_hotspot_8u292b10.zip");
-                this.java8Mac = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x64_mac_hotspot_8u292b10.tar.gz");
-                this.java8Linux = new URL("https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jre_x64_linux_hotspot_8u292b10.tar.gz");
+                this.java8Win32 = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x86-32_windows_hotspot_8u312b07.zip");
+                this.java8Win64 = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x64_windows_hotspot_8u312b07.zip");
+                this.java8Mac = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x64_mac_hotspot_8u312b07.tar.gz");
+                this.java8Linux = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x64_linux_hotspot_8u312b07.tar.gz");
             } catch (MalformedURLException e) {
                 // Somebody really screwed up if this happens.
                 e.printStackTrace();
