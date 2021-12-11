@@ -3,7 +3,9 @@ package net.protolauncher.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import net.protolauncher.api.Config.Endpoints;
 import net.protolauncher.api.Config.FileLocation;
+import net.protolauncher.api.User.MicrosoftInfo;
 import net.protolauncher.function.DownloadProgressConsumer;
 import net.protolauncher.function.StepInfoConsumer;
 import net.protolauncher.function.StepProgressConsumer;
@@ -12,6 +14,10 @@ import net.protolauncher.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
+import net.protolauncher.mojang.auth.MicrosoftAuth;
+import net.protolauncher.mojang.auth.MicrosoftAuth.MicrosoftResponse;
+import net.protolauncher.mojang.auth.MicrosoftAuth.MinecraftResponse;
+import net.protolauncher.mojang.auth.MicrosoftAuth.XboxLiveResponse;
 import net.protolauncher.mojang.auth.Yggdrasil;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.rule.Action;
@@ -57,6 +63,7 @@ public class ProtoLauncher {
 
     // Mojang Variables
     private Yggdrasil yggdrasil;
+    private MicrosoftAuth microsoftAuth;
 
     /**
      * Constructs a new ProtoLauncher API as well as the GSON builder for it.
@@ -83,6 +90,19 @@ public class ProtoLauncher {
 
         // Prepare yggdrasil
         yggdrasil = new Yggdrasil(gson, config.getEndpoints().getYggdrasilApi().toString(), config.getClientToken());
+
+        // Prepare microsoft auth
+        Endpoints.MicrosoftApi microsoftApiEndpoints = config.getEndpoints().getMicrosoftApi();
+        microsoftAuth = new MicrosoftAuth(
+            gson,
+            microsoftApiEndpoints.getClientId(),
+            microsoftApiEndpoints.getRedirectUrl(),
+            microsoftApiEndpoints.getOauthAuthorizeUrl().toString(),
+            microsoftApiEndpoints.getOauthTokenUrl().toString(),
+            microsoftApiEndpoints.getXblUrl().toString(),
+            microsoftApiEndpoints.getXstsUrl().toString(),
+            microsoftApiEndpoints.getMcsUrl().toString()
+        );
     }
 
     // Getters
@@ -91,6 +111,12 @@ public class ProtoLauncher {
     }
     public Gson getGson() {
         return gson;
+    }
+    public Yggdrasil getYggdrasil() {
+        return yggdrasil;
+    }
+    public MicrosoftAuth getMicrosoftAuth() {
+        return microsoftAuth;
     }
 
     /**
@@ -122,6 +148,17 @@ public class ProtoLauncher {
         yggdrasil.setGson(gson);
         yggdrasil.setApi(config.getEndpoints().getYggdrasilApi().toString());
         yggdrasil.setClientToken(config.getClientToken());
+
+        // Update Microsoft Auth
+        Endpoints.MicrosoftApi microsoftApiEndpoints = config.getEndpoints().getMicrosoftApi();
+        microsoftAuth.setGson(gson);
+        microsoftAuth.setClientId(microsoftApiEndpoints.getClientId());
+        microsoftAuth.setRedirectUrl(microsoftApiEndpoints.getRedirectUrl());
+        microsoftAuth.setOauthUrl(microsoftApiEndpoints.getOauthAuthorizeUrl().toString());
+        microsoftAuth.setOauthTokenUrl(microsoftApiEndpoints.getOauthTokenUrl().toString());
+        microsoftAuth.setXblUrl(microsoftApiEndpoints.getXblUrl().toString());
+        microsoftAuth.setXstsUrl(microsoftApiEndpoints.getXstsUrl().toString());
+        microsoftAuth.setMcsUrl(microsoftApiEndpoints.getMcsUrl().toString());
     }
 
     /**
@@ -234,6 +271,72 @@ public class ProtoLauncher {
     }
 
     /**
+     * Logs a user in using the provided authCode as fetched from a Microsoft OAuth2 login prompt,
+     * then adds them to the launcher and switches to them.
+     *
+     * @param authCode The authCode, as fetched from a Microsoft OAuth2 login prompt.
+     * @return A new {@link User}.
+     * @throws IOException Thrown if anything goes wrong in the login, authentication, creation, or switching process.
+     */
+    public User addUserMicrosoft(String authCode) throws IOException {
+        // Authenticate with Microsoft
+        MicrosoftResponse microsoftResponse = microsoftAuth.authenticateMicrosoft(authCode);
+        if (microsoftResponse.getError() != null) {
+            throw new IOException("Internal error while authenticating with Microsoft! " + microsoftResponse.getErrorDescription());
+        }
+
+        // Authenticate with Xbox Live
+        XboxLiveResponse xboxLiveResponse;
+        try {
+            xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
+        } catch (Exception e) {
+            if (e.getMessage().startsWith("401")) {
+                microsoftResponse = microsoftAuth.refreshMicrosoft(microsoftResponse.getRefreshToken());
+                if (microsoftResponse.getError() != null) {
+                    throw new IOException("Internal error while refreshing the access token! " + microsoftResponse.getErrorDescription());
+                } else {
+                    xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
+                }
+            } else {
+                throw e;
+            }
+        }
+        String uhs = xboxLiveResponse.getDisplayClaims().getXui()[0].getUhs();
+
+        // Authenticate with XSTS
+        XboxLiveResponse xstsResponse = microsoftAuth.authenticateXsts(xboxLiveResponse.getToken());
+
+        // Authenticate with Minecraft
+        MinecraftResponse minecraftResponse = microsoftAuth.authenticateMinecraft(xstsResponse.getToken(), uhs);
+
+        // Create information
+        MicrosoftInfo microsoftInfo = new MicrosoftInfo(
+            microsoftResponse.getAccessToken(),
+            microsoftResponse.getRefreshToken(),
+            xboxLiveResponse.getToken(),
+            uhs,
+            xstsResponse.getToken(),
+            System.currentTimeMillis() + (Long.parseLong(minecraftResponse.getExpiresIn()) * 1000 * 60)
+        );
+
+        // Ensure game ownership
+        if (!microsoftAuth.verifyOwnership(minecraftResponse.getAccessToken())) {
+            throw new IOException("User does not own the game!");
+        }
+
+        // Get profile
+        MicrosoftAuth.Profile profile = microsoftAuth.getProfile(minecraftResponse.getAccessToken());
+
+        // Create and add a new user
+        User user = new User(profile.getName(), profile.getId(), "{}", minecraftResponse.getAccessToken());
+        user.setMicrosoftInfo(microsoftInfo);
+        this.addUser(user, true);
+
+        // Return the user
+        return user;
+    }
+
+    /**
      * Switches the launcher from one current user to another.
      *
      * @param user The user to switch to.
@@ -261,7 +364,9 @@ public class ProtoLauncher {
      */
     public void removeUser(User user) throws IOException {
         // Remove the user
-        yggdrasil.invalidate(user.getAccessToken());
+        if (user.getMicrosoftInfo() == null) {
+            yggdrasil.invalidate(user.getAccessToken());
+        }
         users.remove(user);
         this.saveUsers();
 

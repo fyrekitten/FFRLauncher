@@ -97,6 +97,13 @@
             <version>1.20</version>
         </dependency>
 
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>17</version>
+        </dependency>
+
         <!-- Annotations -->
         <dependency>
             <groupId>org.jetbrains</groupId>
