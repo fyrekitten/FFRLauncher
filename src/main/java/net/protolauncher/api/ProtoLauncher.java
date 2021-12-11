@@ -33,6 +33,8 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
@@ -52,6 +54,9 @@ import java.util.zip.GZIPInputStream;
  */
 public class ProtoLauncher {
 
+    // Logging
+    private final Logger logger;
+
     // Launcher Variables
     private Gson gson;
     private Config config;
@@ -68,6 +73,10 @@ public class ProtoLauncher {
      * Constructs a new ProtoLauncher API as well as the GSON builder for it.
      */
     public ProtoLauncher() {
+        // Prepare logger
+        logger = LogManager.getLogger("ProtoLauncher");
+        logger.debug("Logger created. Preparing ProtoLauncher API...");
+
         // Create a new GSON builder
         GsonBuilder builder = new GsonBuilder();
 
@@ -103,9 +112,13 @@ public class ProtoLauncher {
             microsoftApiEndpoints.getXstsUrl().toString(),
             microsoftApiEndpoints.getMcsUrl().toString()
         );
+        logger.debug("ProtoLauncher API ready.");
     }
 
     // Getters
+    public Logger getLogger() {
+        return logger;
+    }
     public Config getConfig() {
         return config;
     }
@@ -129,6 +142,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if loading the configuration goes horribly wrong.
      */
     public void loadConfig() throws IOException {
+        logger.debug("Loading configuration...");
         Path path = FileLocation.CONFIG;
 
         // Check if one exists, and if not, generate a new one
@@ -163,6 +177,7 @@ public class ProtoLauncher {
         microsoftAuth.setXblUrl(microsoftApiEndpoints.getXblUrl().toString());
         microsoftAuth.setXstsUrl(microsoftApiEndpoints.getXstsUrl().toString());
         microsoftAuth.setMcsUrl(microsoftApiEndpoints.getMcsUrl().toString());
+        logger.debug("Configuration loaded.");
     }
 
     /**
@@ -171,8 +186,10 @@ public class ProtoLauncher {
      * @throws IOException Thrown if saving the configuration goes horribly wrong.
      */
     public void saveConfig() throws IOException {
+        logger.debug("Saving configuration...");
         Path path = FileLocation.CONFIG;
         Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        logger.debug("Configuration saved.");
     }
 
     /**
@@ -181,6 +198,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if loading the users list goes horribly wrong.
      */
     public void loadUsers() throws IOException {
+        logger.debug("Loading users...");
         Path path = FileLocation.USERS;
 
         // Check if it exists, and if not, make a new list
@@ -192,6 +210,7 @@ public class ProtoLauncher {
         } else {
             users = gson.fromJson(Files.newBufferedReader(path), new TypeToken<List<User>>() { }.getType());
         }
+        logger.debug("Users loaded.");
     }
 
     /**
@@ -200,8 +219,10 @@ public class ProtoLauncher {
      * @throws IOException Thrown if saving the users list goes horribly wrong.
      */
     public void saveUsers() throws IOException {
+        logger.debug("Saving users...");
         Path path = FileLocation.USERS;
         Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        logger.debug("Users saved.");
     }
 
     /**
@@ -244,6 +265,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong saving or switching the user.
      */
     public void addUser(User user, boolean makeDefaultProfiles) throws IOException {
+        logger.debug("Adding a new user: " + user.getUsername() + " (" + user.getUuid() + ")");
+
         // Add user
         users.add(user);
         this.saveUsers();
@@ -255,6 +278,7 @@ public class ProtoLauncher {
         }
 
         // Switch user
+        logger.debug("User added.");
         this.switchUser(user);
     }
 
@@ -267,6 +291,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if anything goes wrong in the login, creation, or switching process.
      */
     public User addUserMojang(String username, String password) throws IOException {
+        logger.debug("Performing Mojang login...");
+
         // Fetch Yggdrasil response
         Yggdrasil.Response response = yggdrasil.authenticate(username, password);
         if (response.getError() != null) {
@@ -280,6 +306,7 @@ public class ProtoLauncher {
         } else {
             properties = "{}";
         }
+        logger.debug("Login completed successfully.");
 
         // Create and add a new user
         User user = new User(response.getSelectedProfile().getName(), response.getSelectedProfile().getId(), properties, response.getAccessToken());
@@ -298,13 +325,17 @@ public class ProtoLauncher {
      * @throws IOException Thrown if anything goes wrong in the login, authentication, creation, or switching process.
      */
     public User addUserMicrosoft(String authCode) throws IOException {
+        logger.debug("Performing Microsoft login...");
+
         // Authenticate with Microsoft
+        logger.debug("Authenticating with Microsoft...");
         MicrosoftResponse microsoftResponse = microsoftAuth.authenticateMicrosoft(authCode);
         if (microsoftResponse.getError() != null) {
             throw new IOException("Internal error while authenticating with Microsoft! " + microsoftResponse.getErrorDescription());
         }
 
         // Authenticate with Xbox Live
+        logger.debug("Authenticating with Xbox Live...");
         XboxLiveResponse xboxLiveResponse;
         try {
             xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
@@ -323,9 +354,11 @@ public class ProtoLauncher {
         String uhs = xboxLiveResponse.getDisplayClaims().getXui()[0].getUhs();
 
         // Authenticate with XSTS
+        logger.debug("Authenticating with XSTS...");
         XboxLiveResponse xstsResponse = microsoftAuth.authenticateXsts(xboxLiveResponse.getToken());
 
         // Authenticate with Minecraft
+        logger.debug("Authenticating with Minecraft...");
         MinecraftResponse minecraftResponse = microsoftAuth.authenticateMinecraft(xstsResponse.getToken(), uhs);
 
         // Create information
@@ -339,12 +372,15 @@ public class ProtoLauncher {
         );
 
         // Ensure game ownership
+        logger.debug("Verifying game ownership...");
         if (!microsoftAuth.verifyOwnership(minecraftResponse.getAccessToken())) {
             throw new IOException("User does not own the game!");
         }
 
         // Get profile
+        logger.debug("Fetching user profile...");
         MicrosoftAuth.Profile profile = microsoftAuth.getProfile(minecraftResponse.getAccessToken());
+        logger.debug("Login completed successfully.");
 
         // Create and add a new user
         User user = new User(profile.getName(), profile.getId(), "{}", minecraftResponse.getAccessToken());
@@ -362,6 +398,12 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong switching users.
      */
     public void switchUser(@Nullable User user) throws IOException {
+        if (user != null) {
+            logger.debug("Switching users to " + user.getUsername() + " (" + user.getUuid() + ")...");
+        } else {
+            logger.debug("Switching to no users...");
+        }
+
         // If the user is null, remove the current user
         // Otherwise, switch users
         if (user == null) {
@@ -382,6 +424,7 @@ public class ProtoLauncher {
                 this.checkLatest(user.getUuid());
             }
         }
+        logger.debug("User switched.");
 
         // Save config
         this.saveConfig();
@@ -394,11 +437,14 @@ public class ProtoLauncher {
      * @throws IOException Thrown if removing the user or switching the current user goes wrong.
      */
     public void removeUser(User user) throws IOException {
+        logger.debug("Removing user " + user.getUsername() + " (" + user.getUuid() + ")...");
+
         // Remove the user
         if (user.getMicrosoftInfo() == null) {
             yggdrasil.invalidate(user.getAccessToken());
         }
         users.remove(user);
+        logger.debug("User removed.");
         this.saveUsers();
 
         // Switch to the next possible user
@@ -415,6 +461,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if loading the profiles map goes horribly wrong.
      */
     public void loadProfiles() throws IOException {
+        logger.debug("Loading profiles...");
         Path path = FileLocation.PROFILES;
 
         // Check if it exists, and if not, make a new list
@@ -426,6 +473,7 @@ public class ProtoLauncher {
         } else {
             profiles = gson.fromJson(Files.newBufferedReader(path), new TypeToken<HashMap<String, List<Profile>>>() { }.getType());
         }
+        logger.debug("Profiles loaded.");
     }
 
     /**
@@ -434,8 +482,10 @@ public class ProtoLauncher {
      * @throws IOException Thrown if saving the profiles map goes horribly wrong.
      */
     public void saveProfiles() throws IOException {
+        logger.debug("Saving profiles...");
         Path path = FileLocation.PROFILES;
         Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        logger.debug("Profiles saved.");
     }
 
     /**
@@ -502,6 +552,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong saving or switching the profile.
      */
     public void addProfile(Profile profile) throws IOException {
+        logger.debug("Adding a new profile: " + profile.getName());
+
         // Get existing profiles
         List<Profile> userProfiles = this.getProfiles(profile.getOwner());
         if (userProfiles == null) {
@@ -514,6 +566,7 @@ public class ProtoLauncher {
         this.saveProfiles();
 
         // Switch profile
+        logger.debug("Profile added.");
         this.switchProfile(profile);
     }
 
@@ -524,6 +577,12 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong switching profiles.
      */
     public void switchProfile(@Nullable Profile profile) throws IOException {
+        if (profile != null) {
+            logger.debug("Switching profiles to " + profile.getName() + "...");
+        } else {
+            logger.debug("Switching to no profiles...");
+        }
+
         // If the profile is null, remove the current profile
         // Otherwise, switch profiles
         if (profile == null) {
@@ -531,6 +590,7 @@ public class ProtoLauncher {
         } else {
             config.setCurrentProfileUuid(profile.getUuid());
         }
+        logger.debug("Profile switched.");
 
         // Save config
         this.saveConfig();
@@ -543,6 +603,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if removing the profile or switching the current profile goes wrong.
      */
     public void removeProfile(Profile profile) throws IOException {
+        logger.debug("Removing profile " + profile.getName() + "...");
+
         // Remove the profile
         List<Profile> userProfiles = this.getProfiles(profile.getOwner());
         if (userProfiles == null) {
@@ -554,6 +616,7 @@ public class ProtoLauncher {
         } else {
             profiles.put(profile.getOwner(), userProfiles);
         }
+        logger.debug("Profile removed.");
         this.saveProfiles();
 
         // Switch to the next possible profile
@@ -573,6 +636,8 @@ public class ProtoLauncher {
      */
     @Nullable
     public Profile createLatestReleaseProfile(User owner) throws IOException {
+        logger.debug("Creating latest release profile...");
+
         // We can't create it if the version manifest hasn't been loaded
         if (versionManifest == null) {
             return null;
@@ -609,6 +674,8 @@ public class ProtoLauncher {
      */
     @Nullable
     public Profile createLatestSnapshotProfile(User owner) throws IOException {
+        logger.debug("Creating latest snapshot profile...");
+
         // We can't create it if the version manifest hasn't been loaded
         if (versionManifest == null) {
             return null;
@@ -644,6 +711,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if checking the latest profiles fails.
      */
     public void checkLatest(String owner) throws IOException {
+        logger.debug("Checking latest profiles for version updates.");
+
         // We can't check if the version manifest hasn't been loaded
         if (versionManifest == null) {
             return;
@@ -668,6 +737,7 @@ public class ProtoLauncher {
             if (ver.getType() == VersionType.RELEASE) {
                 VersionInfo latestReleaseInfo = versionManifest.getLatestRelease();
                 if (!ver.getMinecraft().equals(latestReleaseInfo.getId())) {
+                    logger.debug("Profile " + profile.getName() + " has been updated to " + latestReleaseInfo.getId());
                     updated = true;
                     profile.setVersion(ver.setVersion(latestReleaseInfo));
                     userProfiles.set(i, profile);
@@ -675,6 +745,7 @@ public class ProtoLauncher {
             } else if (ver.getType() == VersionType.SNAPSHOT) {
                 VersionInfo latestSnapshotInfo = versionManifest.getLatestSnapshot();
                 if (!ver.getMinecraft().equals(latestSnapshotInfo.getId())) {
+                    logger.debug("Profile " + profile.getName() + " has been updated to " + latestSnapshotInfo.getId());
                     updated = true;
                     profile.setVersion(ver.setVersion(latestSnapshotInfo));
                     userProfiles.set(i, profile);
@@ -696,12 +767,14 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong loading or downloading the version manifest.
      */
     public void loadVersionManifest(DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Loading version manifest...");
         URL url = config.getEndpoints().getVersionManifest();
         Path path = FileLocation.VERSION_MANIFEST;
 
         // Check if it needs to be downloaded and, if it does, then download it
         Instant nextManifestUpdate = config.getLastManifestUpdate().plus(config.getMaxManifestAge());
         if (!Files.exists(path) || Instant.now().isAfter(nextManifestUpdate)) {
+            logger.debug("Version manifest update requested. Downloading...");
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
@@ -713,6 +786,7 @@ public class ProtoLauncher {
 
         // Parse the manifest
         versionManifest = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
+        logger.debug("Version manifest loaded.");
     }
 
     /**
@@ -724,6 +798,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong loading or downloading the version.
      */
     public Version downloadVersion(VersionInfo info, DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Downloading version " + info.getId() + "...");
         String id = info.getId();
         Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
         Path file = folder.resolve(id + ".json");
@@ -739,12 +814,14 @@ public class ProtoLauncher {
         }
 
         // Validate
+        logger.debug("Validating...");
         if (config.shouldValidate() && !Validation.validate(file, info.getSha1())) {
             // TODO: Retry download.
             throw new IOException("Validation failed!");
         }
 
         // Load version
+        logger.debug("Version loaded.");
         return gson.fromJson(Files.newBufferedReader(file), Version.class);
     }
 
@@ -756,6 +833,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong downloading the client.
      */
     public void downloadVersionClient(Version version, DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Downloading client for " + version.getId() + "...");
         String id = version.getId();
         Path folder = FileLocation.VERSIONS_FOLDER.resolve(id + "/");
         Path file = folder.resolve(id + ".jar");
@@ -772,10 +850,12 @@ public class ProtoLauncher {
         }
 
         // Validate
+        logger.debug("Validating...");
         if (config.shouldValidate() && !Validation.validate(file, artifact.getSha1())) {
             // TODO: Retry download.
             throw new IOException("Validation failed!");
         }
+        logger.debug("Client downloaded.");
     }
 
     /**
@@ -788,9 +868,10 @@ public class ProtoLauncher {
      * @throws ArchiveException Thrown if something goes wrong during the extraction process.
      */
     public Path downloadJava(StepProgressConsumer stepProgress, DownloadProgressConsumer downloadProgress) throws IOException, ArchiveException {
+        logger.debug("Downloading Java 8...");
         final int totalSteps = 2;
         int currentStep = 0;
-        stepProgress.accept(totalSteps, currentStep++);
+        stepProgress.accept(totalSteps, ++currentStep);
         Path folder = FileLocation.JAVA_8_FOLDER;
         Files.createDirectories(folder);
 
@@ -823,9 +904,10 @@ public class ProtoLauncher {
             long size = Network.fetchFileSize(url);
             Network.download(url, compressedFile, progress -> downloadProgress.accept(size, progress));
         }
-        stepProgress.accept(totalSteps, currentStep++);
+        stepProgress.accept(totalSteps, ++currentStep);
 
         // Extract file
+        logger.debug("Extracting...");
         Path javaPath;
         if (SystemInfo.OS_NAME.equals("windows")) {
             javaPath = folder.resolve("bin/java.exe");
@@ -872,7 +954,8 @@ public class ProtoLauncher {
         if (!Files.exists(javaPath)) {
             throw new IOException("Unable to find java location!");
         }
-        stepProgress.accept(totalSteps, currentStep++);
+        stepProgress.accept(totalSteps, ++currentStep);
+        logger.debug("Java 8 downloaded.");
 
         // Return the java path
         return javaPath;
@@ -889,6 +972,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong downloading any file operation or download.
      */
     public List<Library> downloadLibraries(Version version, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Downloading libraries...");
         Path versionFolder = FileLocation.VERSIONS_FOLDER.resolve(version.getId() + "/");
         Path nativesFolder = versionFolder.resolve("natives/");
         Files.createDirectories(nativesFolder);
@@ -914,7 +998,7 @@ public class ProtoLauncher {
         int currentStep = 0;
         for (Library library : libraries) {
             // Update progress
-            stepProgress.accept(totalSteps, currentStep++);
+            stepProgress.accept(totalSteps, ++currentStep);
             stepInfo.accept(library.getNameDetails()[1]);
 
             // Don't try and download libraries that don't have downloads
@@ -968,6 +1052,7 @@ public class ProtoLauncher {
                 this.extractNative(natPath, nativesFolder, library.getExtract() != null ? library.getExtract().get("exclude") : null);
             }
         }
+        logger.debug("Libraries downloaded.");
 
         // Filter the libraries to exclude any native-only libraries (so it only returns 'true' libraries)
         return libraries.stream().filter(library -> {
@@ -983,6 +1068,8 @@ public class ProtoLauncher {
      * @param exclusions A list of file exclusions
      */
     private void extractNative(Path source, Path destination, @Nullable String[] exclusions) throws IOException {
+        logger.debug("Extracting native...");
+
         // Prepare jar file
         JarFile jar = new JarFile(source.toFile());
         Enumeration<JarEntry> entries = jar.entries();
@@ -1037,6 +1124,7 @@ public class ProtoLauncher {
 
         // Close jar file
         jar.close();
+        logger.debug("Native extracted.");
     }
 
     /**
@@ -1051,6 +1139,7 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes wrong for any file operation or download.
      */
     public AssetIndex downloadAssets(Version version, Path profileFolder, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Downloading assets...");
         Path assetsFolder = FileLocation.ASSETS_FOLDER;
         Path objectsFolder = assetsFolder.resolve("objects/");
         Path virtualFolder = assetsFolder.resolve("virtual/legacy/");
@@ -1091,7 +1180,7 @@ public class ProtoLauncher {
             Asset asset = entry.getValue();
 
             // Update progress
-            stepProgress.accept(totalSteps, currentStep++);
+            stepProgress.accept(totalSteps, ++currentStep);
             stepInfo.accept(asset.getHash());
 
             // Download asset if it does not already exist
@@ -1105,7 +1194,7 @@ public class ProtoLauncher {
             }
 
             // Update progress
-            stepProgress.accept(totalSteps, currentStep++);
+            stepProgress.accept(totalSteps, ++currentStep);
 
             // If the asset is virtual, copy the file to the virtual location
             if (isVirtual) {
@@ -1117,7 +1206,7 @@ public class ProtoLauncher {
             }
 
             // Update progress
-            stepProgress.accept(totalSteps, currentStep++);
+            stepProgress.accept(totalSteps, ++currentStep);
 
             // If map to resources, copy the file to the resources location
             if (mapToResources) {
@@ -1130,7 +1219,7 @@ public class ProtoLauncher {
         }
 
         // Update progress
-        stepProgress.accept(totalSteps, currentStep++);
+        stepProgress.accept(totalSteps, ++currentStep);
         stepInfo.accept("Logging Files");
 
         // Download log files
@@ -1144,6 +1233,7 @@ public class ProtoLauncher {
                 Network.download(url, logFilePath, progress -> downloadProgress.accept(size, progress));
             }
         }
+        logger.debug("Assets downloaded.");
 
         // Return the index
         return index;
@@ -1163,6 +1253,8 @@ public class ProtoLauncher {
      * @throws IOException Thrown if something goes terribly wrong.
      */
     public Process launch(User user, Profile profile, Version version, List<Library> libraries, AssetIndex assetIndex, @Nullable Path javaPath, String launcherVersion) throws IOException {
+        logger.debug("Launching...");
+
         // Prepare run directory
         Path runFolder = Path.of(profile.getPath()).toAbsolutePath();
         Files.createDirectories(runFolder);
@@ -1246,6 +1338,7 @@ public class ProtoLauncher {
         // Launch the game
         ProcessBuilder builder = new ProcessBuilder(command.split(" "));
         builder.directory(runFolder.toFile());
+        logger.debug("Launched.");
         return builder.inheritIO().start();
     }
 
