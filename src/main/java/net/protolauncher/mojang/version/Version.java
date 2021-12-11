@@ -1,16 +1,9 @@
 package net.protolauncher.mojang.version;
 
-import com.google.gson.Gson;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.library.Library;
-import net.protolauncher.util.Network;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import java.util.List;
 
@@ -92,89 +85,6 @@ public class Version {
     }
     public VersionType getType() {
         return type;
-    }
-
-    /**
-     * Resolves the folder for this game version from the given parent folder.
-     *
-     * @param id The id of the game version.
-     * @param parent The parent folder containing other game versions.
-     * @return The path for the folder of this game version.
-     */
-    public static Path resolveFolderPath(String id, Path parent) {
-        return parent.resolve(id + "/");
-    }
-
-    /**
-     * Resolves the file for this game version from the given parent folder,
-     * usually obtained from {@link Version#resolveFolderPath(String, Path)}.
-     *
-     * @param id The id of the game version.
-     * @param parent The parent folder, presumably gotten from {@link Version#resolveFolderPath(String, Path)}.
-     * @return The path for the file of this game version.
-     */
-    public static Path resolveFilePath(String id, Path parent) {
-        return parent.resolve(id + ".json");
-    }
-
-    /**
-     * Resolves the folder for this game version from the given parent folder.
-     * This is a shorthand for calling {@link Version#resolveFolderPath(String, Path)}
-     *
-     * @param parent The parent folder containing other game versions.
-     * @return The path for the folder of this game version.
-     */
-    public Path resolveFolderPath(Path parent) {
-        return resolveFolderPath(id, parent);
-    }
-
-    /**
-     * Resolves the file for this game version from the given parent folder.
-     * This is a shorthand for calling {@link Version#resolveFilePath(String, Path)}.
-     *
-     * @param parent The parent folder, presumably gotten from {@link Version#resolveFolderPath(Path)}.
-     * @return The path for the file of this game version.
-     */
-    public Path resolveFilePath(Path parent) {
-        return resolveFilePath(id, parent);
-    }
-
-    /**
-     * Loads a game version, downloading the file if necessary.
-     * This is the only way to create a game version.
-     *
-     * @param folderLocation The folder location for all other version files.
-     * @param gson The gson to use for parsing the game version.
-     * @param versionInfo The info regarding this game version fetched from the {@link VersionManifest}.
-     * @return A new {@link Version}.
-     * @throws IOException Thrown if there was an exception while trying to download or parse.
-     */
-    public static Version load(
-        Path folderLocation,
-        Gson gson,
-        VersionInfo versionInfo
-    ) throws IOException {
-        // Check for existing version file
-        String id = versionInfo.getId();
-        Path path = resolveFilePath(id, resolveFolderPath(id, folderLocation));
-        Version instance;
-
-        // If it doesn't exist, download a new one
-        // Otherwise, load the existing file
-        if (!Files.exists(path)) {
-            // Download version
-            String versionString = Network.stringify(Network.fetch(new URL(versionInfo.getUrl())));
-            if (path.getParent() != null) {
-                Files.createDirectories(path.getParent());
-            }
-            Files.writeString(path, versionString, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            // Parse version
-            instance = gson.fromJson(versionString, Version.class);
-        } else {
-            instance = gson.fromJson(Files.newBufferedReader(path), Version.class);
-        }
-        return instance;
     }
 
     /**
