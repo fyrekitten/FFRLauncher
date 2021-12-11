@@ -9,6 +9,8 @@ import net.protolauncher.function.StepProgressConsumer;
 import net.protolauncher.gson.DurationTypeAdapter;
 import net.protolauncher.gson.InstantTypeAdapter;
 import net.protolauncher.mojang.Artifact;
+import net.protolauncher.mojang.asset.Asset;
+import net.protolauncher.mojang.asset.AssetIndex;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.rule.Action;
 import net.protolauncher.mojang.rule.Rule;
@@ -32,6 +34,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
@@ -312,6 +315,16 @@ public class ProtoLauncher {
         return javaPath;
     }
 
+    /**
+     * Downloads all the libraries for the given {@link Version}.
+     *
+     * @param version The {@link Version} to download libraries for.
+     * @param stepProgress Called for every library to give a total amount of steps.
+     * @param stepInfo Called to provide the name of each library.
+     * @param downloadProgress Called to show download progress.
+     * @return A filtered and downloaded list of {@link Library}'s.
+     * @throws IOException Thrown if something goes wrong downloading any library.
+     */
     public List<Library> downloadLibraries(Version version, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
         Path versionFolder = FileLocation.VERSIONS_FOLDER.resolve(version.getId() + "/");
         Path nativesFolder = versionFolder.resolve("natives/");
@@ -461,6 +474,104 @@ public class ProtoLauncher {
 
         // Close jar file
         jar.close();
+    }
+
+    public AssetIndex downloadAssets(Version version, Path profileFolder, StepProgressConsumer stepProgress, StepInfoConsumer stepInfo, DownloadProgressConsumer downloadProgress) throws IOException {
+        Path assetsFolder = FileLocation.ASSETS_FOLDER;
+        Path objectsFolder = assetsFolder.resolve("objects/");
+        Path virtualFolder = assetsFolder.resolve("virtual/legacy/");
+        Path logConfigsFolder = assetsFolder.resolve("log_configs/");
+        Path resourcesFolder = profileFolder.resolve("resources/");
+        Path indexFile = assetsFolder.resolve("indexes/" + version.getAssetIndex().getId() + ".json");
+
+        // Download the index file if it does not exist
+        if (!Files.exists(indexFile)) {
+            Files.createDirectories(indexFile.getParent());
+            URL url = new URL(version.getAssetIndex().getUrl());
+            Network.download(url, indexFile);
+        }
+
+        // Validate
+        if (config.shouldValidate() && !Validation.validate(indexFile, version.getAssetIndex().getSha1())) {
+            // TODO: Retry download.
+            throw new IOException("Validation failed!");
+        }
+
+        // Parse the index file
+        AssetIndex index = gson.fromJson(Files.newBufferedReader(indexFile), AssetIndex.class);
+
+        // Create the directories if needed (so we're not checking every loop)
+        boolean isVirtual = Boolean.TRUE.equals(index.isVirtual());
+        if (isVirtual) {
+            Files.createDirectories(virtualFolder);
+        }
+        boolean mapToResources = Boolean.TRUE.equals(index.mapToResources());
+        if (mapToResources) {
+            Files.createDirectories(resourcesFolder);
+        }
+
+        // Main download loop
+        final int totalSteps = index.getObjects().entrySet().size() * 3 + 1; // 3 steps per asset, 1 log file download
+        int currentStep = 0;
+        for (Entry<String, Asset> entry : index.getObjects().entrySet()) {
+            Asset asset = entry.getValue();
+
+            // Update progress
+            stepProgress.accept(totalSteps, currentStep++);
+            stepInfo.accept(asset.getHash());
+
+            // Download asset if it does not already exist
+            String assetLocation = asset.getId() + "/" + asset.getHash();
+            Path assetPath = objectsFolder.resolve(assetLocation);
+            if (!Files.exists(assetPath)) {
+                Files.createDirectories(assetPath.getParent());
+                URL url = new URL(config.getEndpoints().getAssetApi() + assetLocation);
+                long size = asset.getSize();
+                Network.download(url, assetPath, progress -> downloadProgress.accept(size, progress));
+            }
+
+            // Update progress
+            stepProgress.accept(totalSteps, currentStep++);
+
+            // If the asset is virtual, copy the file to the virtual location
+            if (isVirtual) {
+                Path assetPathVirtual = virtualFolder.resolve(entry.getKey());
+                if (!Files.exists(assetPathVirtual)) {
+                    Files.createDirectories(assetPathVirtual.getParent());
+                    Files.copy(assetPath, assetPathVirtual);
+                }
+            }
+
+            // Update progress
+            stepProgress.accept(totalSteps, currentStep++);
+
+            // If map to resources, copy the file to the resources location
+            if (mapToResources) {
+                Path assetResourcesPath = resourcesFolder.resolve(entry.getKey());
+                if (!Files.exists(assetResourcesPath)) {
+                    Files.createDirectories(assetResourcesPath.getParent());
+                    Files.copy(assetPath, assetResourcesPath);
+                }
+            }
+        }
+
+        // Update progress
+        stepProgress.accept(totalSteps, currentStep++);
+        stepInfo.accept("Logging Files");
+
+        // Download log files
+        if (version.getLogging() != null) {
+            Artifact artifact = version.getLogging().getClient().getFile();
+            Path logFilePath = logConfigsFolder.resolve(artifact.getId());
+            if (!Files.exists(logFilePath)) {
+                URL url = new URL(artifact.getUrl());
+                long size = artifact.getSize();
+                Network.download(url, logFilePath, progress -> downloadProgress.accept(size, progress));
+            }
+        }
+
+        // Return the index
+        return index;
     }
 
 }
