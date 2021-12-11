@@ -47,9 +47,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 
-// TODO: Massive todo! I need to go through everything again after I've implemented users and profiles to ensure
-//       I didn't miss anything relating to them, as some of the code while copying over I omitted so I could get a test running.
-
 /**
  * The ProtoLauncher API. The structure of this class may seem weird to some, so here is some explanation:
  */
@@ -246,7 +243,6 @@ public class ProtoLauncher {
      * @param makeDefaultProfiles Whether to create the default profiles for this user or not.
      * @throws IOException Thrown if something goes wrong saving or switching the user.
      */
-    // TODO: Make default profiles.
     public void addUser(User user, boolean makeDefaultProfiles) throws IOException {
         // Add user
         users.add(user);
@@ -365,7 +361,6 @@ public class ProtoLauncher {
      * @param user The user to switch to.
      * @throws IOException Thrown if something goes wrong switching users.
      */
-    // TODO: Switch profile.
     public void switchUser(@Nullable User user) throws IOException {
         // If the user is null, remove the current user
         // Otherwise, switch users
