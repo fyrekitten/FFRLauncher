@@ -341,6 +341,7 @@ public class Config {
 
         // Launcher
         public static final Path LAUNCHER_FOLDER = Path.of("launcher/");
+        public static final Path CACHE_FOLDER = LAUNCHER_FOLDER.resolve("cache/");
         public static final Path CONFIG = LAUNCHER_FOLDER.resolve("config.json");
         public static final Path PROFILES = LAUNCHER_FOLDER.resolve("profiles.json");
         public static final Path USERS = LAUNCHER_FOLDER.resolve("users.json");

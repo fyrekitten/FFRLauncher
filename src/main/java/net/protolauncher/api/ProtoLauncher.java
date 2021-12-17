@@ -456,6 +456,24 @@ public class ProtoLauncher {
     }
 
     /**
+     * Fetches the file path to a user's avatar.
+     *
+     * @param uuid The uuid of the user.
+     * @return The file path.
+     * @throws IOException Thrown if something goes wrong fetching the avatar.
+     */
+    public Path fetchUserAvatar(@Nullable String uuid) throws IOException {
+        String id = uuid != null ? uuid : "MHF_Steve";
+        Path location = FileLocation.CACHE_FOLDER.resolve("avatars/" + id + ".png");
+        if (!Files.exists(location)) {
+            Files.createDirectories(location.getParent());
+            URL endpoint = new URL(config.getEndpoints().getAvatarApi().toString().replace("%uuid%", id));
+            Network.download(endpoint, location);
+        }
+        return location;
+    }
+
+    /**
      * Loads the map of {@link Profile}s, saving an empty map if the file does not already exist.
      *
      * @throws IOException Thrown if loading the profiles map goes horribly wrong.

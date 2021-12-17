@@ -50,6 +50,9 @@ public class App extends Application {
     public Stage getStage() {
         return stage;
     }
+    public ProtoLauncher getLauncher() {
+        return launcher;
+    }
     @Nullable
     public Process getGame() {
         return game;
