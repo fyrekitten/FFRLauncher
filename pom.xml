@@ -76,6 +76,16 @@
                     <include>maven.properties</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.png</include>
+                    <include>**/*.svg</include>
+                    <include>**/*.ttf</include>
+                    <include>**/*.css</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
         </resources>
 
     </build>

@@ -1,0 +1,27 @@
+* {
+    /* Colors */
+    -fx-color-white: #ffffff;
+    -fx-color-black: #000000;
+    -fx-color-red-dark: #ba4151;
+    -fx-color-red: #c8162f;
+    -fx-color-red-light: #f01a37;
+
+    /* Theme */
+    -fx-color-theme-dark: #943471;
+    -fx-color-theme: #c81688;
+    -fx-color-theme-light: #f218a2;
+    -fx-color-theme-blue: #54b7e8;
+
+    /* Background */
+    -fx-color-background-superdark: #1b1b1b;
+    -fx-color-background-dark: #202020;
+    -fx-color-background: #272727;
+    -fx-color-background-light: #373737;
+    -fx-color-background-superlight: #474747;
+
+    /* Text */
+    -fx-color-text: white;
+    -fx-color-text-good: #16c856;
+    -fx-color-text-bad: #c8162f;
+    -fx-color-subtext: #9f9f9f;
+}

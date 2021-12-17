@@ -1,0 +1,32 @@
+/* Root */
+.root {
+    -fx-background-color: -fx-color-background;
+}
+
+/* Text */
+.text {
+    -fx-font-smoothing-type: gray;
+}
+
+/* Labels */
+.label,
+.radio-button,
+.check-box,
+.button {
+    -fx-font-smoothing-type: gray;
+    -fx-text-fill: -fx-color-text;
+    -fx-font: 15pt "Raleway Medium";
+}
+
+/* Progress Bars */
+.progress-bar .track {
+    -fx-background-color: -fx-color-white;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+.progress-bar .bar {
+    -fx-background-color: -fx-color-theme;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 5px;
+}

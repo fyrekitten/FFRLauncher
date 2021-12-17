@@ -1,0 +1,18 @@
+/* Vertical Container */
+#lv-vertical-container {
+    -fx-alignment: bottom-center;
+    -fx-spacing: 5px;
+}
+
+/* Progress Bar */
+#lv-pgb {
+    -fx-pref-width: infinity;
+}
+
+/* Logs */
+#lv-logs-container {
+    -fx-padding: 5px;
+}
+#lv-logs-container Label {
+    -fx-font: 12pt "Raleway";
+}
