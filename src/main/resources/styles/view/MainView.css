@@ -1,0 +1,40 @@
+/* Tab Headers */
+#mv-tab-header-container {
+    -fx-background-color: -fx-color-background-light;
+    -fx-min-height: 55px;
+}
+#mv-tab-header-container HBox {
+    -fx-focus-traversable: true;
+}
+#mv-tab-header-container HBox:hover {
+    -fx-cursor: hand;
+    -fx-background-color: -fx-color-background-superlight;
+}
+#mv-tab-header-container HBox:focused {
+    -fx-background-color: -fx-color-background-superlight;
+}
+#mv-tab-header-container HBox.current {
+    -fx-background-color: -fx-color-background;
+}
+#mv-tab-header-container HBox.current:hover {
+    -fx-cursor: default;
+}
+#mv-tab-header-container HBox Label {
+    -fx-pref-height: 55px;
+    -fx-padding: 0 16px;
+    -fx-alignment: center;
+    -fx-font: 18pt "Raleway";
+}
+
+/* Attribution */
+#mv-attribution-container {
+    -fx-alignment: bottom-center;
+    -fx-padding: 0 0 10px 0;
+}
+#mv-attribution {
+    -fx-font: 8pt "Raleway";
+    -fx-text-fill: -fx-color-subtext;
+}
+#mv-attribution .text {
+    -fx-font-smoothing-type: lcd;
+}

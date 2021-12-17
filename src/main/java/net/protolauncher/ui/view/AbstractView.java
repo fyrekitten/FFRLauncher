@@ -33,6 +33,15 @@ public abstract class AbstractView<L extends Pane> {
         this.register();
     }
 
+    /**
+     * Constructs a new view using the given {@link Pane} as the layout with no stylesheets.
+     *
+     * @param layout The layout for this view.
+     */
+    public AbstractView(L layout) {
+        this(layout, new String[0]);
+    }
+
     // Getters
     public L getLayout() {
         return layout;
