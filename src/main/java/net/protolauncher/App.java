@@ -85,7 +85,7 @@ public class App extends Application {
             // Create main scene, set the view to a new loading view, set it to the stage, and show it
             MainScene scene = new MainScene();
             LoadingView loadingView = new LoadingView();
-            scene.setView(loadingView);
+            scene.addView(loadingView);
             this.stage.setScene(scene);
             this.stage.show();
 
@@ -131,7 +131,8 @@ public class App extends Application {
                 LogPassthroughAppender.removeListener(loadingView);
 
                 // Set the scene to the main view
-                scene.setView(new MainView());
+                scene.addView(new MainView());
+                scene.removeView(loadingView);
             });
 
             // Handle failure

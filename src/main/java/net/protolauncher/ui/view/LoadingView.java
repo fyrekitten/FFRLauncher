@@ -25,6 +25,7 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
     // Constructor
     public LoadingView() {
         super(new StackPane(), "Colors.css", "Components.css", "view/LoadingView.css");
+        this.getLayout().setId("lv-layout");
         LogPassthroughAppender.registerListener(this);
     }
 

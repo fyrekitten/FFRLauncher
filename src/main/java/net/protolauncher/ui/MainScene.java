@@ -5,13 +5,15 @@ import javafx.scene.layout.Pane;
 import net.protolauncher.ui.view.AbstractView;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import static net.protolauncher.App.LOGGER;
 
 public final class MainScene extends Scene {
 
     // Variables
-    private AbstractView<?> view;
+    private final List<AbstractView<?>> views = new ArrayList<>();
 
     // Constructor
     public MainScene() {
@@ -25,41 +27,59 @@ public final class MainScene extends Scene {
         this.getAccelerators().put(Keybinds.REFRESH, () -> {
             LOGGER.debug("Refreshing...");
             this.getStylesheets().clear();
-            view.refresh();
-            this.setView(view);
+            ((Pane) this.getRoot()).getChildren().clear();
+            for (AbstractView<?> view : views) {
+                view.refresh();
+                this.addView(view, true);
+            }
         });
     }
 
     // Getters
-    public AbstractView<?> getView() {
-        return view;
+    public List<AbstractView<?>> getViews() {
+        return views;
     }
 
     /**
-     * Removes the previous view from this scene and adds a new one.
-     * <br/><br/>
-     * TODO: Transitions
+     * Adds a new abstract view onto the topmost layer for this scene.
      *
-     * @param view The new view to set this scene to.
+     * @param view The view to add onto this scene.
      */
-    public void setView(AbstractView<?> view) {
+    public void addView(AbstractView<?> view) {
+        this.addView(view, false);
+    }
+    private void addView(AbstractView<?> view, boolean dontAdd) {
         Pane root = (Pane) this.getRoot();
-
-        // Set the view variable
-        this.view = view;
-
-        // Remove previous view
-        root.getChildren().clear();
 
         // Load stylesheets
         this.loadStylesheets(view);
 
-        // Add new view
-        root.getChildren().add(view.getLayout());
+        // Add view
+        if (!dontAdd) {
+            views.add(view);
+        }
+        root.getChildren().add(0, view.getLayout());
 
         // Bind width and height
         view.getLayout().prefWidthProperty().bind(root.widthProperty());
         view.getLayout().prefHeightProperty().bind(root.heightProperty());
+    }
+
+    /**
+     * Removes the given view from this scene.
+     *
+     * @param view The view to remove from this scene.
+     */
+    public void removeView(AbstractView<?> view) {
+        Pane root = (Pane) this.getRoot();
+
+        // Remove view
+        views.remove(view);
+        root.getChildren().remove(view.getLayout());
+
+        // Unbind width and height
+        view.getLayout().prefWidthProperty().unbind();
+        view.getLayout().prefHeightProperty().unbind();
     }
 
     /**
@@ -69,7 +89,7 @@ public final class MainScene extends Scene {
      *
      * @param view The view to load stylesheets for.
      */
-    private void loadStylesheets(AbstractView<?> view) {
+    public void loadStylesheets(AbstractView<?> view) {
         for (String stylesheet : view.getStylesheets()) {
             URL url = this.getClass().getResource("/styles/" + stylesheet);
             if (url == null) {

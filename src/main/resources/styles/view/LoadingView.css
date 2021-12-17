@@ -1,3 +1,8 @@
+/* Layout */
+#lv-layout {
+    -fx-background-color: -fx-color-background;
+}
+
 /* Vertical Container */
 #lv-vertical-container {
     -fx-alignment: bottom-center;
