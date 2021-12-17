@@ -6,8 +6,11 @@ import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.protolauncher.api.ProtoLauncher;
+import net.protolauncher.log4j.LogPassthroughAppender;
 import net.protolauncher.ui.MainScene;
+import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.LoadingView;
+import net.protolauncher.ui.view.MainView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +34,7 @@ public class App extends Application {
     // Singleton
     private static App instance;
     private Stage stage;
+    private ProtoLauncher launcher;
     @Nullable
     private Process game;
 
@@ -58,6 +62,9 @@ public class App extends Application {
     public void start(Stage stage) throws Exception {
         Platform.setImplicitExit(true);
         try {
+            // Create API
+            launcher = new ProtoLauncher();
+
             // Prepare stage
             this.stage = stage;
             this.stage.setTitle("ProtoLauncher v" + App.VERSION);
@@ -77,11 +84,68 @@ public class App extends Application {
 
             // Create main scene, set the view to a new loading view, set it to the stage, and show it
             MainScene scene = new MainScene();
-            scene.setView(new LoadingView());
+            LoadingView loadingView = new LoadingView();
+            scene.setView(loadingView);
             this.stage.setScene(scene);
             this.stage.show();
+
+            // The task for initializing the launcher
+            LauncherTask<Void> initializeTask = new LauncherTask<>() {
+                @Override
+                protected Void call() throws Exception {
+                    final int totalSteps = 5;
+                    int currentStep = 0;
+
+                    // Load config
+                    updateProgress(++currentStep, totalSteps);
+                    launcher.loadConfig();
+
+                    // Load version manifest
+                    updateProgress(++currentStep, totalSteps);
+                    int versionManifestStep = currentStep;
+                    launcher.loadVersionManifest((total, transferred) -> {
+                        updateProgress(versionManifestStep + (transferred / (double) total), totalSteps);
+                    });
+
+                    // Load users
+                    updateProgress(++currentStep, totalSteps);
+                    launcher.loadUsers();
+
+                    // Load profiles
+                    updateProgress(++currentStep, totalSteps);
+                    launcher.loadProfiles();
+
+                    // Done
+                    updateProgress(++currentStep, totalSteps);
+                    return null;
+                }
+            };
+
+            // Handle UI updates for the progress bar and messages
+            initializeTask.setMessageHandler(LOGGER::info);
+            initializeTask.setProgressHandler(progress -> loadingView.setProgress(progress.getWorkDone() / progress.getMax()));
+
+            // Handle success
+            initializeTask.setOnSucceeded(event -> {
+                // Remove listener
+                LogPassthroughAppender.removeListener(loadingView);
+
+                // Set the scene to the main view
+                scene.setView(new MainView());
+            });
+
+            // Handle failure
+            initializeTask.setOnFailed(event -> {
+                LOGGER.error(initializeTask.getException());
+                initializeTask.getException().printStackTrace();
+                System.exit(-1);
+                // TODO: Show error popup window
+            });
+
+            // Run the initialization thread
+            new Thread(initializeTask).start();
         } catch (Exception e) {
-            // TODO: Show error popup window.
+            // TODO: Show error popup window
             LOGGER.error(e);
             e.printStackTrace();
             Platform.exit();

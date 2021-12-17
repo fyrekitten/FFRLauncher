@@ -66,7 +66,8 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
     // ILogListener Implementation
     @Override
     public void onLog(LogEvent event) {
-        Platform.runLater(() -> this.addLog(event.getMessage().getFormattedMessage()));
+        String message = event.getMessage().getFormattedMessage();
+        Platform.runLater(() -> this.addLog(message));
     }
 
     /**
