@@ -1,0 +1,21 @@
+/* Header */
+#ut-header {
+    -fx-alignment: center;
+    -fx-padding: 0 16px 0 0;
+}
+
+/* No Users */
+#nut-layout {
+    -fx-alignment: center;
+    -fx-padding: 0 0 30px 0;
+}
+#nut-layout Label {
+    -fx-text-fill: -fx-color-subtext;
+    -fx-font-family: "Roboto Light";
+}
+#nut-title {
+    -fx-font-size: 34pt;
+}
+#nut-subtitle {
+    -fx-font-size: 20pt;
+}

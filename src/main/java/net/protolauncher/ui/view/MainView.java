@@ -2,11 +2,18 @@ package net.protolauncher.ui.view;
 
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import net.protolauncher.App;
+import net.protolauncher.api.ProtoLauncher;
+import net.protolauncher.api.User;
+import net.protolauncher.ui.view.tab.NoUsersTab;
 import net.protolauncher.ui.view.tab.PlayTab;
 import net.protolauncher.ui.view.tab.ProfilesTab;
+import net.protolauncher.ui.view.tab.UsersTab;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +38,8 @@ public class MainView extends AbstractView<Pane> {
             "Components.css",
             "view/MainView.css",
             "view/tab/PlayTab.css",
-            "view/tab/ProfilesTab.css"
+            "view/tab/ProfilesTab.css",
+            "view/tab/UsersTab.css"
         );
         this.getLayout().setId("mv-layout");
     }
@@ -39,6 +47,10 @@ public class MainView extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Get current user
+        ProtoLauncher launcher = App.getInstance().getLauncher();
+        User currentUser = launcher.getCurrentUser();
+
         // Set lists
         this.tabs = new HashMap<>();
         this.hboxTabHeaders = new HashMap<>();
@@ -56,10 +68,39 @@ public class MainView extends AbstractView<Pane> {
         // Tabs
         tabs.put("play", new PlayTab());
         tabs.put("profiles", new ProfilesTab());
+        if (currentUser == null) {
+            tabs.put("users", new NoUsersTab());
+        } else {
+            tabs.put("users", new UsersTab());
+        }
 
         // Tab Headers
-        hboxTabHeaders.put("play", this.constructHeader("pt", "play", "Play"));
-        hboxTabHeaders.put("profiles", this.constructHeader("prt", "profiles", "Profiles"));
+        hboxTabHeaders.put("play", this.constructTabHeader("pt", "play", "Play"));
+        hboxTabHeaders.put("profiles", this.constructTabHeader("prt", "profiles", "Profiles"));
+        if (currentUser == null) {
+            hboxTabHeaders.put("users", this.constructTabHeader("nut", "users", "No Users"));
+        } else {
+            // If the user exists, then we have a different header for that one
+            HBox hboxHeader = this.constructTabHeader("ut", "users", currentUser.getUsername());
+            ImageView ivAvatar;
+            try {
+                ivAvatar = new ImageView(launcher.fetchUserAvatar(currentUser.getUuid()).toAbsolutePath().toUri().toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    ivAvatar = new ImageView(launcher.fetchUserAvatar(null).toAbsolutePath().toUri().toString());
+                } catch (IOException e2) {
+                    // Why are we still here? Just to suffer?
+                    e2.printStackTrace();
+                    ivAvatar = new ImageView();
+                }
+            }
+            ivAvatar.setSmooth(false);
+            ivAvatar.setFitWidth(24);
+            ivAvatar.setFitHeight(24);
+            hboxHeader.getChildren().add(ivAvatar);
+            hboxTabHeaders.put("users", hboxHeader);
+        }
 
         // Tab Separator
         regTabHeaderSeparator = new Region();
@@ -90,7 +131,7 @@ public class MainView extends AbstractView<Pane> {
      * @param id The id for this tab.
      * @param name The name of this tab to be used in the header label.
      */
-    private HBox constructHeader(String cssId, String id, String name) {
+    private HBox constructTabHeader(String cssId, String id, String name) {
         // Container
         HBox header = new HBox();
         header.setId(cssId + "-header");
@@ -118,7 +159,8 @@ public class MainView extends AbstractView<Pane> {
         hboxTabHeaderContainer.getChildren().addAll(
             hboxTabHeaders.get("play"),
             hboxTabHeaders.get("profiles"),
-            regTabHeaderSeparator
+            regTabHeaderSeparator,
+            hboxTabHeaders.get("users")
         );
         bpTabContainer.setTop(hboxTabHeaderContainer);
         layout.getChildren().add(bpTabContainer);
