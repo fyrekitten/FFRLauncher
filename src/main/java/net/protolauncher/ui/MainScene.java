@@ -2,7 +2,7 @@ package net.protolauncher.ui;
 
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
-import net.protolauncher.ui.views.AbstractView;
+import net.protolauncher.ui.view.AbstractView;
 
 import java.net.URL;
 

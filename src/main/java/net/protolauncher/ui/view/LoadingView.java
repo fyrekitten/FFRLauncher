@@ -1,4 +1,4 @@
-package net.protolauncher.ui.views;
+package net.protolauncher.ui.view;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -63,6 +63,12 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
         layout.getChildren().add(ivLogo);
     }
 
+    // ILogListener Implementation
+    @Override
+    public void onLog(LogEvent event) {
+        Platform.runLater(() -> this.addLog(event.getMessage().getFormattedMessage()));
+    }
+
     /**
      * Updates the progress on the progress bar for this view.
      * @param progress The amount of progress.
@@ -85,12 +91,6 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
         if (children.size() > 10) {
             children.remove(0);
         }
-    }
-
-    // ILogListener Implementation
-    @Override
-    public void onLog(LogEvent event) {
-        Platform.runLater(() -> this.addLog(event.getMessage().getFormattedMessage()));
     }
 
 }

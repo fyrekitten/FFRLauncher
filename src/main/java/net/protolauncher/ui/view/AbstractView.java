@@ -1,4 +1,4 @@
-package net.protolauncher.ui.views;
+package net.protolauncher.ui.view;
 
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;

@@ -7,7 +7,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.ui.MainScene;
-import net.protolauncher.ui.views.LoadingView;
+import net.protolauncher.ui.view.LoadingView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
