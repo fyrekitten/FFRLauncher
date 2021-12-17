@@ -7,7 +7,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.log4j.LogPassthroughAppender;
-import net.protolauncher.ui.MainScene;
+import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.InitializingView;
 import net.protolauncher.ui.view.MainView;
@@ -86,7 +86,7 @@ public class App extends Application {
             this.loadFont("Roboto-Bold.ttf");
 
             // Create main scene, set the view to a new loading view, set it to the stage, and show it
-            MainScene scene = new MainScene();
+            ViewScene scene = new ViewScene();
             InitializingView initializingView = new InitializingView();
             scene.addView(initializingView);
             this.stage.setScene(scene);

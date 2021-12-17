@@ -18,6 +18,16 @@
     -fx-font: 15pt "Raleway Medium";
 }
 
+/* Fields */
+.text-field,
+.password-field {
+    -fx-text-fill: -fx-color-text;
+    -fx-background-color: -fx-color-background-superdark;
+    -fx-font: 14pt "Raleway Medium";
+    -fx-border-insets: 0;
+    -fx-background-radius: 0;
+}
+
 /* Progress Bars */
 .progress-bar .track {
     -fx-background-color: -fx-color-white;
@@ -29,4 +39,42 @@
     -fx-background-insets: 0;
     -fx-background-radius: 0;
     -fx-padding: 5px;
+}
+
+/* Invisibility */
+.invisible {
+    visibility: hidden;
+}
+
+/* ProtoLauncher Button */
+.plb-container {
+    -fx-border-color: black;
+}
+.plb-button {
+    -fx-font: 13pt "Raleway Semibold";
+    -fx-background-color: -fx-color-theme;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-max-width: 9999999;
+    -fx-padding: 4px 20px;
+}
+.plb-button:hover {
+    -fx-cursor: hand;
+    -fx-background-color: -fx-color-theme-light;
+}
+.plb-button:focused {
+    -fx-background-color: -fx-color-theme-light;
+}
+.plp-button:disabled {
+    -fx-background-color: -fx-color-theme-dark;
+}
+.plp-button.red {
+    -fx-background-color: -fx-color-red;
+}
+.plp-button.red:hover,
+.plp-button.red:focused {
+    -fx-background-color: -fx-color-red-light;
+}
+.plp-button.red:disabled {
+    -fx-background-color: -fx-color-red-dark;
 }

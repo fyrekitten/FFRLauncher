@@ -1,6 +1,9 @@
 package net.protolauncher.ui.view;
 
+import javafx.event.ActionEvent;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -8,6 +11,8 @@ import javafx.scene.layout.*;
 import net.protolauncher.App;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
+import net.protolauncher.ui.ViewScene;
+import net.protolauncher.ui.dialog.LoginDialog;
 import net.protolauncher.ui.view.tab.NoUsersTab;
 import net.protolauncher.ui.view.tab.PlayTab;
 import net.protolauncher.ui.view.tab.ProfilesTab;
@@ -16,6 +21,8 @@ import net.protolauncher.ui.view.tab.UsersTab;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.protolauncher.App.LOGGER;
 
 public class MainView extends AbstractView<Pane> {
 
@@ -28,6 +35,8 @@ public class MainView extends AbstractView<Pane> {
     private HBox hboxTabHeaderContainer;
     private Map<String, HBox> hboxTabHeaders;
     private Region regTabHeaderSeparator;
+    private VBox vboxAddButtonContainer;
+    private Button btnAddButton;
     private VBox vboxAttributionContainer;
     private Label lblAttribution;
 
@@ -119,6 +128,20 @@ public class MainView extends AbstractView<Pane> {
         lblAttribution.setId("mv-attribution");
         lblAttribution.setMouseTransparent(true);
 
+        // Add Button Container
+        vboxAddButtonContainer = new VBox();
+        vboxAddButtonContainer.setId("mv-add-button-container");
+        vboxAddButtonContainer.prefWidthProperty().bind(this.getLayout().widthProperty());
+        vboxAddButtonContainer.prefHeightProperty().bind(this.getLayout().heightProperty());
+        vboxAddButtonContainer.setPickOnBounds(false);
+
+        // Add Button
+        btnAddButton = new Button("+");
+        btnAddButton.getStyleClass().add("invisible");
+        btnAddButton.setId("mv-add-button");
+        btnAddButton.setPickOnBounds(false);
+        btnAddButton.setOnAction(this::addButtonPressed);
+
         // Switch to the default tab
         this.currentTabId = "play";
         this.switchTab("play", true);
@@ -164,6 +187,8 @@ public class MainView extends AbstractView<Pane> {
         );
         bpTabContainer.setTop(hboxTabHeaderContainer);
         layout.getChildren().add(bpTabContainer);
+        vboxAddButtonContainer.getChildren().add(btnAddButton);
+        layout.getChildren().add(vboxAddButtonContainer);
         vboxAttributionContainer.getChildren().add(lblAttribution);
         layout.getChildren().add(vboxAttributionContainer);
     }
@@ -195,6 +220,13 @@ public class MainView extends AbstractView<Pane> {
             newHeader.getStyleClass().add("current");
             newHeader.requestFocus();
 
+            // Change add button visibility
+            if (tabId.equals("profiles") || tabId.equals("users")) {
+                btnAddButton.getStyleClass().remove("invisible");
+            } else if (!btnAddButton.getStyleClass().contains("invisible")) {
+                btnAddButton.getStyleClass().add("invisible");
+            }
+
             // Set the current tab
             AbstractView<?> tab = tabs.get(tabId);
             currentTabId = tabId;
@@ -209,6 +241,38 @@ public class MainView extends AbstractView<Pane> {
      */
     public void switchTab(String tabId) {
         this.switchTab(tabId, false);
+    }
+
+    /**
+     * Handles the add button being pressed.
+     */
+    private void addButtonPressed(ActionEvent event) {
+        Scene scene = App.getInstance().getStage().getScene();
+        ViewScene viewScene;
+        if (scene instanceof ViewScene) {
+            viewScene = (ViewScene) scene;
+            viewScene.removeFocus();
+        } else {
+            LOGGER.error("Scene was not a ViewScene");
+            return;
+        }
+
+        if (currentTabId.equals("users")) {
+            LoginDialog dialog = new LoginDialog(App.getInstance().getStage());
+            dialog.setOnHidden(hiddenEvent -> {
+                // Get the user and if the user is not null, refresh the scene
+                User user = (User) dialog.getUserData();
+                if (user != null) {
+                    // TODO: Show loading screen
+                    viewScene.refresh();
+                    System.gc();
+                }
+            });
+            dialog.show();
+            System.out.println("Add user prompt!");
+        } else if (currentTabId.equals("profiles")) {
+            System.out.println("Add profiles prompt!");
+        }
     }
 
 }

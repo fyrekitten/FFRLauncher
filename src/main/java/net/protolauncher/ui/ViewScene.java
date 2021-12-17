@@ -10,13 +10,13 @@ import java.util.List;
 
 import static net.protolauncher.App.LOGGER;
 
-public final class MainScene extends Scene {
+public final class ViewScene extends Scene {
 
     // Variables
     private final List<AbstractView<?>> views = new ArrayList<>();
 
     // Constructor
-    public MainScene() {
+    public ViewScene() {
         super(new Pane());
 
         // Add focus removal
@@ -24,15 +24,7 @@ public final class MainScene extends Scene {
         this.removeFocus();
 
         // Add refresh keybind
-        this.getAccelerators().put(Keybinds.REFRESH, () -> {
-            LOGGER.debug("Refreshing...");
-            this.getStylesheets().clear();
-            ((Pane) this.getRoot()).getChildren().clear();
-            for (AbstractView<?> view : views) {
-                view.refresh();
-                this.addView(view, true);
-            }
-        });
+        this.getAccelerators().put(Keybinds.REFRESH, this::refresh);
     }
 
     // Getters
@@ -97,6 +89,19 @@ public final class MainScene extends Scene {
                 continue;
             }
             this.getStylesheets().add(url.toExternalForm());
+        }
+    }
+
+    /**
+     * Refreshes all views in this view and reloads the stylesheets.
+     */
+    public void refresh() {
+        LOGGER.debug("Refreshing...");
+        this.getStylesheets().clear();
+        ((Pane) this.getRoot()).getChildren().clear();
+        for (AbstractView<?> view : views) {
+            view.refresh();
+            this.addView(view, true);
         }
     }
 

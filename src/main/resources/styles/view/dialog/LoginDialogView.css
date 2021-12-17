@@ -1,0 +1,17 @@
+/* Layout */
+#ldv-layout {
+    -fx-alignment: center;
+}
+
+/* Container */
+#ldv-container {
+    -fx-alignment: center;
+    -fx-spacing: 25px;
+}
+
+/* Buttons */
+#ldv-button-mojang,
+#ldv-button-microsoft {
+    -fx-font-size: 16pt;
+    -fx-padding: 14px 38px;
+}

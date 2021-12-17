@@ -26,6 +26,30 @@
     -fx-font: 18pt "Raleway";
 }
 
+/* Add Button */
+#mv-add-button-container {
+    -fx-alignment: bottom-right;
+    -fx-padding: 0 30px 30px 0;
+}
+#mv-add-button {
+    -fx-pref-width: 70px;
+    -fx-pref-height: 70px;
+    -fx-font: 42pt "Roboto Light";
+    -fx-text-fill: -fx-color-subtext;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 9999999;
+    -fx-background-color: -fx-color-background-light;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.5, 0, 0);
+}
+#mv-add-button:hover {
+    -fx-cursor: hand;
+    -fx-background-color: -fx-color-background-superlight;
+}
+#mv-add-button:focused {
+    -fx-background-color: -fx-color-background-superlight;
+}
+
 /* Attribution */
 #mv-attribution-container {
     -fx-alignment: bottom-center;
