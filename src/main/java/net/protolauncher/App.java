@@ -9,7 +9,7 @@ import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.log4j.LogPassthroughAppender;
 import net.protolauncher.ui.MainScene;
 import net.protolauncher.ui.task.LauncherTask;
-import net.protolauncher.ui.view.LoadingView;
+import net.protolauncher.ui.view.InitializingView;
 import net.protolauncher.ui.view.MainView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,8 +84,8 @@ public class App extends Application {
 
             // Create main scene, set the view to a new loading view, set it to the stage, and show it
             MainScene scene = new MainScene();
-            LoadingView loadingView = new LoadingView();
-            scene.addView(loadingView);
+            InitializingView initializingView = new InitializingView();
+            scene.addView(initializingView);
             this.stage.setScene(scene);
             this.stage.show();
 
@@ -123,16 +123,16 @@ public class App extends Application {
 
             // Handle UI updates for the progress bar and messages
             initializeTask.setMessageHandler(LOGGER::info);
-            initializeTask.setProgressHandler(progress -> loadingView.setProgress(progress.getWorkDone() / progress.getMax()));
+            initializeTask.setProgressHandler(progress -> initializingView.setProgress(progress.getWorkDone() / progress.getMax()));
 
             // Handle success
             initializeTask.setOnSucceeded(event -> {
                 // Remove listener
-                LogPassthroughAppender.removeListener(loadingView);
+                LogPassthroughAppender.removeListener(initializingView);
 
                 // Set the scene to the main view
                 scene.addView(new MainView());
-                scene.removeView(loadingView);
+                scene.removeView(initializingView);
             });
 
             // Handle failure

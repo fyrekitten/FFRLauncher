@@ -14,7 +14,7 @@ import net.protolauncher.log4j.ILogListener;
 import net.protolauncher.log4j.LogPassthroughAppender;
 import org.apache.logging.log4j.core.LogEvent;
 
-public class LoadingView extends AbstractView<StackPane> implements ILogListener {
+public class InitializingView extends AbstractView<StackPane> implements ILogListener {
 
     // Components
     private ImageView ivLogo;
@@ -23,9 +23,9 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
     private VBox vboxLogsContainer;
 
     // Constructor
-    public LoadingView() {
-        super(new StackPane(), "Colors.css", "Components.css", "view/LoadingView.css");
-        this.getLayout().setId("lv-layout");
+    public InitializingView() {
+        super(new StackPane(), "Colors.css", "Components.css", "view/InitializingView.css");
+        this.getLayout().setId("iv-layout");
         LogPassthroughAppender.registerListener(this);
     }
 
@@ -40,19 +40,19 @@ public class LoadingView extends AbstractView<StackPane> implements ILogListener
         this.getLayout().prefWidthProperty().addListener((observable, oldValue, newValue) -> {
             ivLogo.setFitWidth(Math.min(1200, newValue.doubleValue() / 1.5));
         });
-        ivLogo.setId("lv-logo");
+        ivLogo.setId("iv-logo");
 
         // Vertical Container
         vboxVerticalContainer = new VBox();
-        vboxVerticalContainer.setId("lv-vertical-container");
+        vboxVerticalContainer.setId("iv-vertical-container");
 
         // Progress Bar
         pgbProgressBar = new ProgressBar(0);
-        pgbProgressBar.setId("lv-pgb");
+        pgbProgressBar.setId("iv-pgb");
 
         // Logs
         vboxLogsContainer = new VBox();
-        vboxLogsContainer.setId("lv-logs-container");
+        vboxLogsContainer.setId("iv-logs-container");
     }
 
     @Override
