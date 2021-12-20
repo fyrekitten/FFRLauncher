@@ -41,6 +41,7 @@ public class LoginDialogView extends AbstractView<HBox> {
         // Microsoft
         btnMicrosoft = new PLButton("Microsoft Login");
         btnMicrosoft.getButton().setId("ldv-button-microsoft");
+        btnMicrosoft.getButton().setOnAction(this::microsoftButtonPressed);
     }
 
     @Override
@@ -65,7 +66,11 @@ public class LoginDialogView extends AbstractView<HBox> {
      * Handles the Microsoft button being pressed.
      */
     private void microsoftButtonPressed(ActionEvent event) {
-        System.out.println("Microsoft login pressed!");
+        Scene scene = dialog.getScene();
+        if (scene instanceof ViewScene viewScene) {
+            viewScene.addView(new MicrosoftLoginDialogView(dialog));
+            viewScene.removeView(this);
+        }
     }
 
 }

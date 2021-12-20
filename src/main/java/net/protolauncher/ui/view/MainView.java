@@ -269,7 +269,6 @@ public class MainView extends AbstractView<Pane> {
                 }
             });
             dialog.show();
-            System.out.println("Add user prompt!");
         } else if (currentTabId.equals("profiles")) {
             System.out.println("Add profiles prompt!");
         }

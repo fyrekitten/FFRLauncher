@@ -36,7 +36,7 @@ public abstract class Dialog extends Stage {
      * Initializes the position of this dialog.
      * @param owner The owner of this dialog.
      */
-    protected void initPosition(@Nullable Window owner) {
+    public void initPosition(@Nullable Window owner) {
         if (owner != null) {
             this.setX(owner.getX() + (owner.getWidth() / 2) - (this.getWidth() / 2));
             this.setY(owner.getY() + (owner.getHeight() / 2) - (this.getHeight() / 2));

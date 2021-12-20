@@ -267,6 +267,8 @@ public class ProtoLauncher {
     public void addUser(User user, boolean makeDefaultProfiles) throws IOException {
         logger.debug("Adding a new user: " + user.getUsername() + " (" + user.getUuid() + ")");
 
+        // TODO: Check against an existing user.
+
         // Add user
         users.add(user);
         this.saveUsers();
