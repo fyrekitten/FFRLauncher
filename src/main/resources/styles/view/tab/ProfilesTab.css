@@ -1,4 +1,15 @@
-/* Layout */
-#prt-layout {
-    -fx-background-color: blue;
+/* No Profiles */
+#npt-layout {
+    -fx-alignment: center;
+    -fx-padding: 0 0 30px 0;
+}
+#npt-layout Label {
+    -fx-text-fill: -fx-color-subtext;
+    -fx-font-family: "Roboto Light";
+}
+#npt-title {
+    -fx-font-size: 34pt;
+}
+#npt-subtitle {
+    -fx-font-size: 20pt;
 }

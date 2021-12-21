@@ -3,6 +3,7 @@ package net.protolauncher.ui;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.LoadingView;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,7 +25,13 @@ public final class ViewScene extends Scene {
         this.removeFocus();
 
         // Add refresh keybind
-        this.getAccelerators().put(Keybinds.REFRESH, this::refresh);
+        this.getAccelerators().put(Keybinds.REFRESH, () -> {
+            LoadingView lv = new LoadingView();
+            lv.show(this, () -> {
+                this.refresh();
+                lv.hide(this);
+            });
+        });
     }
 
     // Getters

@@ -9,14 +9,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import net.protolauncher.App;
+import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.dialog.LoginDialog;
-import net.protolauncher.ui.view.tab.NoUsersTab;
-import net.protolauncher.ui.view.tab.PlayTab;
-import net.protolauncher.ui.view.tab.ProfilesTab;
-import net.protolauncher.ui.view.tab.UsersTab;
+import net.protolauncher.ui.view.tab.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -59,6 +57,7 @@ public class MainView extends AbstractView<Pane> {
         // Get current user
         ProtoLauncher launcher = App.getInstance().getLauncher();
         User currentUser = launcher.getCurrentUser();
+        Profile currentProfile = currentUser != null ? launcher.getCurrentProfile() : null;
 
         // Set lists
         this.tabs = new HashMap<>();
@@ -76,7 +75,11 @@ public class MainView extends AbstractView<Pane> {
 
         // Tabs
         tabs.put("play", new PlayTab());
-        tabs.put("profiles", new ProfilesTab());
+        if (currentProfile == null) {
+            tabs.put("profiles", new NoProfilesTab());
+        } else {
+            tabs.put("profiles", new ProfilesTab());
+        }
         if (currentUser == null) {
             tabs.put("users", new NoUsersTab());
         } else {
