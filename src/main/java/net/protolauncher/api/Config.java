@@ -160,6 +160,16 @@ public class Config {
         @Since(1.0)
         private URL assetApi;
         /**
+         * The URL to the official <a href="https://wiki.vg/Mojang_API">Mojang API</a>.
+         */
+        @Since(1.0)
+        private URL mojangApi;
+        /**
+         * The URL to the official <a href="https://wiki.vg/Mojang_API">Minecraft Services API</a>.
+         */
+        @Since(1.0)
+        private URL minecraftServicesApi;
+        /**
          * The URL to the <a href="https://wiki.vg/Authentication">Mojang Yggdrasil Authentication System</a>.
          */
         @Since(1.0)
@@ -200,11 +210,13 @@ public class Config {
          */
         private Endpoints() {
             try {
+                this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json");
+                this.assetApi = new URL("https://resources.download.minecraft.net/");
+                this.mojangApi = new URL("https://api.mojang.com/");
+                this.minecraftServicesApi = new URL("https://api.minecraftservices.com/");
                 this.yggdrasilApi = new URL("https://authserver.mojang.com/");
                 this.microsoftApi = new MicrosoftApi();
-                this.assetApi = new URL("https://resources.download.minecraft.net/");
                 this.avatarApi = new URL("https://minotar.net/helm/%uuid%/256");
-                this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json");
                 this.java8Win32 = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x86-32_windows_hotspot_8u312b07.zip");
                 this.java8Win64 = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x64_windows_hotspot_8u312b07.zip");
                 this.java8Mac = new URL("https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jre_x64_mac_hotspot_8u312b07.tar.gz");
@@ -222,6 +234,12 @@ public class Config {
         }
         public URL getAssetApi() {
             return assetApi;
+        }
+        public URL getMojangApi() {
+            return mojangApi;
+        }
+        public URL getMinecraftServicesApi() {
+            return minecraftServicesApi;
         }
         public URL getYggdrasilApi() {
             return yggdrasilApi;
@@ -281,11 +299,6 @@ public class Config {
              */
             @Since(1.0)
             private URL xstsUrl;
-            /**
-             * The Minecraft authentication service URL.
-             */
-            @Since(1.0)
-            private URL mcsUrl;
 
             /**
              * Constructs a new MicrosoftApi with default values.
@@ -298,7 +311,6 @@ public class Config {
                     this.oauthTokenUrl = new URL("https://login.live.com/oauth20_token.srf");
                     this.xblUrl = new URL("https://user.auth.xboxlive.com/user/authenticate");
                     this.xstsUrl = new URL("https://xsts.auth.xboxlive.com/xsts/authorize");
-                    this.mcsUrl = new URL("https://api.minecraftservices.com/");
                 } catch (MalformedURLException e) {
                     // Somebody really screwed up if this happens.
                     e.printStackTrace();
@@ -324,9 +336,6 @@ public class Config {
             }
             public URL getXstsUrl() {
                 return xstsUrl;
-            }
-            public URL getMcsUrl() {
-                return mcsUrl;
             }
 
         }

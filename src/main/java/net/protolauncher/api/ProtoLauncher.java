@@ -18,6 +18,7 @@ import net.protolauncher.mojang.auth.MicrosoftAuth;
 import net.protolauncher.mojang.auth.MicrosoftAuth.MicrosoftResponse;
 import net.protolauncher.mojang.auth.MicrosoftAuth.MinecraftResponse;
 import net.protolauncher.mojang.auth.MicrosoftAuth.XboxLiveResponse;
+import net.protolauncher.mojang.auth.MojangAPI;
 import net.protolauncher.mojang.auth.Yggdrasil;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.rule.Action;
@@ -66,6 +67,7 @@ public class ProtoLauncher {
     // Mojang Variables
     @Nullable
     private VersionManifest versionManifest;
+    private MojangAPI mojangApi;
     private Yggdrasil yggdrasil;
     private MicrosoftAuth microsoftAuth;
 
@@ -97,6 +99,9 @@ public class ProtoLauncher {
         users = new ArrayList<>();
         profiles = new HashMap<>();
 
+        // Prepare mojang api
+        mojangApi = new MojangAPI(gson, config.getEndpoints().getMojangApi().toString(), config.getEndpoints().getMinecraftServicesApi().toString());
+
         // Prepare yggdrasil
         yggdrasil = new Yggdrasil(gson, config.getEndpoints().getYggdrasilApi().toString(), config.getClientToken());
 
@@ -110,7 +115,7 @@ public class ProtoLauncher {
             microsoftApiEndpoints.getOauthTokenUrl().toString(),
             microsoftApiEndpoints.getXblUrl().toString(),
             microsoftApiEndpoints.getXstsUrl().toString(),
-            microsoftApiEndpoints.getMcsUrl().toString()
+            config.getEndpoints().getMinecraftServicesApi().toString()
         );
         logger.debug("ProtoLauncher API ready.");
     }
@@ -162,6 +167,11 @@ public class ProtoLauncher {
         }
         gson = gsonBuilder.create();
 
+        // Update Mojang API
+        mojangApi.setGson(gson);
+        mojangApi.setMojangApi(config.getEndpoints().getMojangApi().toString());
+        mojangApi.setMinecraftServicesApi(config.getEndpoints().getMinecraftServicesApi().toString());
+
         // Update Yggdrasil
         yggdrasil.setGson(gson);
         yggdrasil.setApi(config.getEndpoints().getYggdrasilApi().toString());
@@ -176,7 +186,7 @@ public class ProtoLauncher {
         microsoftAuth.setOauthTokenUrl(microsoftApiEndpoints.getOauthTokenUrl().toString());
         microsoftAuth.setXblUrl(microsoftApiEndpoints.getXblUrl().toString());
         microsoftAuth.setXstsUrl(microsoftApiEndpoints.getXstsUrl().toString());
-        microsoftAuth.setMcsUrl(microsoftApiEndpoints.getMcsUrl().toString());
+        microsoftAuth.setMcsUrl(config.getEndpoints().getMinecraftServicesApi().toString());
         logger.debug("Configuration loaded.");
     }
 
@@ -393,7 +403,7 @@ public class ProtoLauncher {
 
         // Get profile
         logger.debug("Fetching user profile...");
-        MicrosoftAuth.Profile profile = microsoftAuth.getProfile(minecraftResponse.getAccessToken());
+        MojangAPI.ProfileInformationResponse profile = mojangApi.getProfileInformation(minecraftResponse.getAccessToken());
         logger.debug("Login completed successfully.");
 
         // Create and add a new user
@@ -467,6 +477,123 @@ public class ProtoLauncher {
         } else {
             this.switchUser(null);
         }
+    }
+
+    /**
+     * Validates the given user's profile.
+     * @param uuid The UUID of the user to validate.
+     * @return True if the user is still valid, false if not.
+     */
+    public boolean validateUser(String uuid) throws IOException {
+        // Fetch the user
+        User user = this.getUser(uuid);
+        if (user == null) {
+            return false;
+        }
+
+        logger.debug("Validating user " + user.getUsername() + "(" + user.getUuid() + ")...");
+
+        // Track whether we changed something about the user or not.
+        boolean changed = false;
+
+        // If the user is a Mojang account, check against the access token
+        if (user.getMicrosoftInfo() == null) {
+            logger.debug("Validating Mojang login...");
+            boolean isValid = yggdrasil.validate(user.getAccessToken());
+            // If it's not valid, attempt to refresh it
+            if (!isValid) {
+                logger.debug("Mojang login is invalid, attempting to refresh...");
+                try {
+                    Yggdrasil.Response response = yggdrasil.refresh(user.getAccessToken());
+                    if (response.getError() != null) {
+                        logger.debug("Mojang refresh failed, user is invalid!");
+                        return false;
+                    } else {
+                        logger.debug("Mojang login refreshed.");
+                        changed = true;
+                        user.setAccessToken(response.getAccessToken());
+                    }
+                } catch (Exception e) {
+                    logger.debug("Mojang refresh failed, user is invalid!");
+                    return false;
+                }
+            }
+        } else {
+            logger.debug("Validating Microsoft login...");
+            MicrosoftInfo mci = user.getMicrosoftInfo();
+            boolean isValid = System.currentTimeMillis() < mci.getDateExpires();
+            // If it's not valid, attempt to refresh it (this process is a pain)
+            if (!isValid) {
+                logger.debug("Microsoft login is invalid, attempting to refresh...");
+
+                // Authenticate with Microsoft
+                logger.debug("Refreshing Microsoft...");
+                MicrosoftResponse microsoftResponse = microsoftAuth.refreshMicrosoft(mci.getRefreshToken());
+                if (microsoftResponse.getError() != null) {
+                    logger.debug("Microsoft refresh failed, user is invalid!");
+                    return false;
+                }
+
+                // Authenticate with Xbox Live
+                logger.debug("Refreshing Xbox Live...");
+                XboxLiveResponse xboxLiveResponse;
+                try {
+                    xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
+                } catch (Exception e) {
+                    logger.debug("Microsoft or Xbox Live refresh failed, user is invalid!");
+                    return false;
+                }
+                String uhs = xboxLiveResponse.getDisplayClaims().getXui()[0].getUhs();
+
+                // Authenticate with XSTS
+                logger.debug("Refreshing XSTS...");
+                XboxLiveResponse xstsResponse = microsoftAuth.authenticateXsts(xboxLiveResponse.getToken());
+
+                // Authenticate with Minecraft
+                logger.debug("Refreshing Minecraft...");
+                MinecraftResponse minecraftResponse = microsoftAuth.authenticateMinecraft(xstsResponse.getToken(), uhs);
+
+                // Update Microsoft Login Information
+                changed = true;
+                mci.setAccessToken(microsoftResponse.getAccessToken());
+                mci.setRefreshToken(microsoftResponse.getRefreshToken());
+                mci.setXblToken(xboxLiveResponse.getToken());
+                mci.setXblUhs(uhs);
+                mci.setXstsToken(xstsResponse.getToken());
+                mci.setDateExpires(System.currentTimeMillis() + (Long.parseLong(minecraftResponse.getExpiresIn()) * 1000 * 60));
+                user.setMicrosoftInfo(mci);
+
+                // Update access token
+                user.setAccessToken(minecraftResponse.getAccessToken());
+                logger.debug("Microsoft login refreshed.");
+            }
+
+            // Verify game ownership
+            isValid = microsoftAuth.verifyOwnership(user.getAccessToken());
+            if (!isValid) {
+                logger.debug("User does not own the game anymore and is therefore invalid!");
+                return false;
+            }
+        }
+
+        // Fetch profile and update username
+        logger.debug("Fetching profile...");
+        MojangAPI.ProfileInformationResponse profile = mojangApi.getProfileInformation(user.getAccessToken());
+        if (!user.getUsername().equals(profile.getName())) {
+            logger.debug("Username changed from " + user.getUsername() + " to " + profile.getName() + "!");
+            changed = true;
+            user.setUsername(profile.getName());
+        }
+
+        // If we changed, save
+        if (changed) {
+            logger.debug("User changes detected.");
+            this.saveUsers();
+        }
+
+        // Return true
+        logger.debug("User is valid.");
+        return true;
     }
 
     /**

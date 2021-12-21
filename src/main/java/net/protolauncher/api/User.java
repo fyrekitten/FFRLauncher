@@ -143,9 +143,23 @@ public class User {
         }
 
         // Setters
-        public MicrosoftInfo setAccessToken(String accessToken) {
+        public void setAccessToken(String accessToken) {
             this.accessToken = accessToken;
-            return this;
+        }
+        public void setRefreshToken(String refreshToken) {
+            this.refreshToken = refreshToken;
+        }
+        public void setXblToken(String xblToken) {
+            this.xblToken = xblToken;
+        }
+        public void setXblUhs(String xblUhs) {
+            this.xblUhs = xblUhs;
+        }
+        public void setXstsToken(String xstsToken) {
+            this.xstsToken = xstsToken;
+        }
+        public void setDateExpires(long dateExpires) {
+            this.dateExpires = dateExpires;
         }
 
     }

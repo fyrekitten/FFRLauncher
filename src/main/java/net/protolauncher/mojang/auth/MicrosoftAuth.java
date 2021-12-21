@@ -275,21 +275,6 @@ public class MicrosoftAuth {
     }
 
     /**
-     * Fetches a Minecraft profile from the Microsoft Service using the provided Mojang accessToken.
-     *
-     * @param accessToken The Mojang accessToken.
-     * @return A new {@link Profile}.
-     * @throws IOException Thrown if there is a network issue.
-     */
-    public Profile getProfile(String accessToken) throws IOException {
-        HttpsURLConnection connection = Network.createConnection(new URL(mcsUrl + "minecraft/profile"), "GET", true);
-        connection.setRequestProperty("Authorization", "Bearer " + accessToken);
-
-        String response = Network.stringify(Network.send(connection, false));
-        return gson.fromJson(response, Profile.class);
-    }
-
-    /**
      * Represents a response from the Microsoft login.
      */
     public static class MicrosoftResponse extends Error {
@@ -459,90 +444,6 @@ public class MicrosoftAuth {
         }
         public String getExpiresIn() {
             return expiresIn;
-        }
-
-    }
-
-    /**
-     * Represents a Minecraft/Microsoft profile.
-     */
-    public static class Profile {
-
-        // JSON Properties
-        private String id;
-        private String name;
-        private Skin[] skins;
-        private JsonElement[] capes;
-        private String path;
-        private String errorType;
-        private String error;
-        private String errorMessage;
-        private String developerMessage;
-
-        // Suppress default constructor
-        private Profile() { }
-
-        // Getters
-        public String getId() {
-            return id;
-        }
-        public String getName() {
-            return name;
-        }
-        public Skin[] getSkins() {
-            return skins;
-        }
-        public JsonElement[] getCapes() {
-            return capes;
-        }
-        public String getPath() {
-            return path;
-        }
-        public String getErrorType() {
-            return errorType;
-        }
-        public String getError() {
-            return error;
-        }
-        public String getErrorMessage() {
-            return errorMessage;
-        }
-        public String getDeveloperMessage() {
-            return developerMessage;
-        }
-
-        /**
-         * Represents a Skin from a MicrosoftAuth Profile.
-         */
-        public static class Skin {
-
-            // JSON Properties
-            private String id;
-            private String state;
-            private String url;
-            private String variant;
-            private String alias;
-
-            // Suppress default constructor
-            private Skin() { }
-
-            // Getters
-            public String getId() {
-                return id;
-            }
-            public String getState() {
-                return state;
-            }
-            public String getUrl() {
-                return url;
-            }
-            public String getVariant() {
-                return variant;
-            }
-            public String getAlias() {
-                return alias;
-            }
-
         }
 
     }

@@ -6,6 +6,7 @@ import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.protolauncher.api.ProtoLauncher;
+import net.protolauncher.api.User;
 import net.protolauncher.log4j.LogPassthroughAppender;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.task.LauncherTask;
@@ -96,7 +97,7 @@ public class App extends Application {
             LauncherTask<Void> initializeTask = new LauncherTask<>() {
                 @Override
                 protected Void call() throws Exception {
-                    final int totalSteps = 5;
+                    final int totalSteps = 6;
                     int currentStep = 0;
 
                     // Load config
@@ -117,6 +118,14 @@ public class App extends Application {
                     // Load profiles
                     updateProgress(++currentStep, totalSteps);
                     launcher.loadProfiles();
+
+                    // Validate current user
+                    updateProgress(++currentStep, totalSteps);
+                    User user = launcher.getCurrentUser();
+                    if (user != null) {
+                        boolean isValid = launcher.validateUser(user.getUuid());
+                        // If we have an invalid user on launch, what do we do?
+                    }
 
                     // Done
                     updateProgress(++currentStep, totalSteps);
