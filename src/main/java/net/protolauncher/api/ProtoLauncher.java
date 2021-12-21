@@ -499,7 +499,7 @@ public class ProtoLauncher {
             return false;
         }
 
-        logger.debug("Validating user " + user.getUsername() + "(" + user.getUuid() + ")...");
+        logger.debug("Validating user " + user.getUsername() + " (" + user.getUuid() + ")...");
 
         // Track whether we changed something about the user or not.
         boolean changed = false;

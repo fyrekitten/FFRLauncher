@@ -1,6 +1,6 @@
 package net.protolauncher.ui.view.tab;
 
-import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.CacheHint;
 import javafx.scene.Scene;
@@ -173,20 +173,27 @@ public class UsersTab extends AbstractView<Pane> {
             return;
         }
 
+        // Switch user task
         LoadingView lv = new LoadingView();
-        lv.show(viewScene, new Thread(() -> {
-            try {
-                App.getInstance().getLauncher().switchUser(user);
-            } catch (Exception e) {
-                // TODO: Show error popup window
-                e.printStackTrace();
+        Task<Void> switchUserTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                ProtoLauncher launcher = App.getInstance().getLauncher();
+                launcher.switchUser(user);
+                launcher.validateUser(user.getUuid());
+                // TODO: Prompt user to log in again if their user is invalid
+                return null;
             }
-            Platform.runLater(() -> {
-                viewScene.refresh();
-                System.gc();
-                lv.hide(viewScene);
-            });
-        }));
+        };
+        switchUserTask.setOnSucceeded(event1 -> {
+            viewScene.refresh();
+            System.gc();
+            lv.hide(viewScene);
+        });
+        switchUserTask.setOnFailed(event1 -> {
+            lv.hide(viewScene);
+        });
+        lv.show(viewScene, switchUserTask);
     }
 
     /**
@@ -203,20 +210,24 @@ public class UsersTab extends AbstractView<Pane> {
             return;
         }
 
+        // Remove user task
         LoadingView lv = new LoadingView();
-        lv.show(viewScene, new Thread(() -> {
-            try {
+        Task<Void> removeUserTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
                 App.getInstance().getLauncher().removeUser(user);
-            } catch (Exception e) {
-                // TODO: Show error popup window
-                e.printStackTrace();
+                return null;
             }
-            Platform.runLater(() -> {
-                viewScene.refresh();
-                System.gc();
-                lv.hide(viewScene);
-            });
-        }));
+        };
+        removeUserTask.setOnSucceeded(event1 -> {
+            viewScene.refresh();
+            System.gc();
+            lv.hide(viewScene);
+        });
+        removeUserTask.setOnFailed(event1 -> {
+            lv.hide(viewScene);
+        });
+        lv.show(viewScene, removeUserTask);
     }
 
 }
