@@ -193,7 +193,7 @@ public class UsersTab extends AbstractView<Pane> {
         switchUserTask.setOnFailed(event1 -> {
             lv.hide(viewScene);
         });
-        lv.show(viewScene, switchUserTask);
+        lv.show(viewScene, () -> new Thread(switchUserTask).start());
     }
 
     /**
@@ -227,7 +227,7 @@ public class UsersTab extends AbstractView<Pane> {
         removeUserTask.setOnFailed(event1 -> {
             lv.hide(viewScene);
         });
-        lv.show(viewScene, removeUserTask);
+        lv.show(viewScene, () -> new Thread(removeUserTask).start());
     }
 
 }
