@@ -1,0 +1,13 @@
+/* Image */
+#lv-image-container {
+    -fx-alignment: center;
+}
+#lv-image {
+    -fx-background-color: -fx-color-theme-blue;
+    -fx-min-height: 95px;
+    -fx-min-width: 95px;
+    -fx-pref-height: 95px;
+    -fx-pref-width: 95px;
+    -fx-max-height: 95px;
+    -fx-max-width: 95px;
+}

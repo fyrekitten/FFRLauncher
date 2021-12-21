@@ -41,6 +41,7 @@ public final class ViewScene extends Scene {
         this.addView(view, false);
     }
     private void addView(AbstractView<?> view, boolean dontAdd) {
+        LOGGER.debug("Adding view " + view.getClass().getName());
         Pane root = (Pane) this.getRoot();
 
         // Load stylesheets
@@ -50,7 +51,7 @@ public final class ViewScene extends Scene {
         if (!dontAdd) {
             views.add(view);
         }
-        root.getChildren().add(0, view.getLayout());
+        root.getChildren().add(view.getLayout());
 
         // Bind width and height
         view.getLayout().prefWidthProperty().bind(root.widthProperty());
@@ -63,6 +64,7 @@ public final class ViewScene extends Scene {
      * @param view The view to remove from this scene.
      */
     public void removeView(AbstractView<?> view) {
+        LOGGER.debug("Removing view " + view.getClass().getName());
         Pane root = (Pane) this.getRoot();
 
         // Remove view
@@ -96,7 +98,7 @@ public final class ViewScene extends Scene {
      * Refreshes all views in this view and reloads the stylesheets.
      */
     public void refresh() {
-        LOGGER.debug("Refreshing...");
+        LOGGER.debug("Refreshing view");
         this.getStylesheets().clear();
         ((Pane) this.getRoot()).getChildren().clear();
         for (AbstractView<?> view : views) {

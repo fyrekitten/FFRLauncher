@@ -1,5 +1,6 @@
 package net.protolauncher.ui.view.tab;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.CacheHint;
 import javafx.scene.Scene;
@@ -16,6 +17,7 @@ import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.components.PLButton;
 import net.protolauncher.ui.components.PLScrollPane;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.LoadingView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -171,15 +173,20 @@ public class UsersTab extends AbstractView<Pane> {
             return;
         }
 
-        // TODO: Show loading screen
-        try {
-            App.getInstance().getLauncher().switchUser(user);
-        } catch (Exception e) {
-            // TODO: Show error popup window
-            e.printStackTrace();
-        }
-        viewScene.refresh();
-        System.gc();
+        LoadingView lv = new LoadingView();
+        lv.show(viewScene, new Thread(() -> {
+            try {
+                App.getInstance().getLauncher().switchUser(user);
+            } catch (Exception e) {
+                // TODO: Show error popup window
+                e.printStackTrace();
+            }
+            Platform.runLater(() -> {
+                viewScene.refresh();
+                System.gc();
+                lv.hide(viewScene);
+            });
+        }));
     }
 
     /**
@@ -196,15 +203,20 @@ public class UsersTab extends AbstractView<Pane> {
             return;
         }
 
-        // TODO: Show loading screen
-        try {
-            App.getInstance().getLauncher().removeUser(user);
-        } catch (Exception e) {
-            // TODO: Show error popup window
-            e.printStackTrace();
-        }
-        viewScene.refresh();
-        System.gc();
+        LoadingView lv = new LoadingView();
+        lv.show(viewScene, new Thread(() -> {
+            try {
+                App.getInstance().getLauncher().removeUser(user);
+            } catch (Exception e) {
+                // TODO: Show error popup window
+                e.printStackTrace();
+            }
+            Platform.runLater(() -> {
+                viewScene.refresh();
+                System.gc();
+                lv.hide(viewScene);
+            });
+        }));
     }
 
 }

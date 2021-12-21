@@ -263,9 +263,12 @@ public class MainView extends AbstractView<Pane> {
                 // Get the user and if the user is not null, refresh the scene
                 User user = (User) dialog.getUserData();
                 if (user != null) {
-                    // TODO: Show loading screen
-                    viewScene.refresh();
-                    System.gc();
+                    LoadingView lv = new LoadingView();
+                    lv.show(viewScene, () -> {
+                        viewScene.refresh();
+                        System.gc();
+                        lv.hide(viewScene);
+                    });
                 }
             });
             dialog.show();

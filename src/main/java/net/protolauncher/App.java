@@ -1,5 +1,6 @@
 package net.protolauncher;
 
+import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
@@ -65,6 +66,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Platform.setImplicitExit(true);
+        SvgImageLoaderFactory.install();
         try {
             // Create API
             launcher = new ProtoLauncher();
