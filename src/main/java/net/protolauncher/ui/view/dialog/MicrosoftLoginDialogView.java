@@ -31,6 +31,9 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
         super(new Pane(), "Colors.css", "Components.css", "view/dialog/LoginDialogView.css");
         this.dialog = dialog;
 
+        // Remove focus removal
+        this.dialog.getScene().getRoot().setOnMouseClicked(null);
+
         // Resize dialog
         double prevX = this.dialog.getX();
         double prevY = this.dialog.getY();
