@@ -268,6 +268,14 @@ public class ProtoLauncher {
     }
 
     /**
+     * Returns the entire list of users.
+     * @return The entire list of users.
+     */
+    public List<User> getAllUsers() {
+        return users;
+    }
+
+    /**
      * Adds the user to the launcher and switches to it.
      *
      * @param user The {@link User} to add.

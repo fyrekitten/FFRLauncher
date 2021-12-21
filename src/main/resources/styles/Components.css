@@ -41,6 +41,49 @@
     -fx-padding: 5px;
 }
 
+/* Scroll Panes */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Scroll Bars */
+.scroll-bar {
+    -fx-block-increment: 20;
+    -fx-unit-increment: 2;
+}
+.scroll-bar .track {
+    -fx-background-color: -fx-color-background-dark;
+}
+.scroll-bar .thumb {
+    -fx-background-color: -fx-color-background-light;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: -fx-color-background-superlight;
+    -fx-cursor: hand;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: -fx-color-background-light;
+    -fx-background-insets: 0;
+    -fx-padding: 0.5em 0.25em;
+}
+.scroll-bar .increment-button:hover,
+.scroll-bar .decrement-button:hover {
+    -fx-background-color: -fx-color-background-superlight;
+    -fx-cursor: hand;
+}
+.scroll-bar .increment-button .increment-arrow,
+.scroll-bar .decrement-button .decrement-arrow {
+    -fx-background-color: -fx-color-text;
+    -fx-effect: none;
+}
+
 /* Invisibility */
 .invisible {
     visibility: hidden;
@@ -65,16 +108,16 @@
 .plb-button:focused {
     -fx-background-color: -fx-color-theme-light;
 }
-.plp-button:disabled {
+.plb-button:disabled {
     -fx-background-color: -fx-color-theme-dark;
 }
-.plp-button.red {
+.plb-button.red {
     -fx-background-color: -fx-color-red;
 }
-.plp-button.red:hover,
-.plp-button.red:focused {
+.plb-button.red:hover,
+.plb-button.red:focused {
     -fx-background-color: -fx-color-red-light;
 }
-.plp-button.red:disabled {
+.plb-button.red:disabled {
     -fx-background-color: -fx-color-red-dark;
 }

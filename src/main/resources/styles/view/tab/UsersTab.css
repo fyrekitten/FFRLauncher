@@ -19,3 +19,37 @@
 #nut-subtitle {
     -fx-font-size: 20pt;
 }
+
+/* Containers */
+#ut-scroll-container {
+    -fx-fit-to-width: true;
+    -fx-fill-height: true;
+}
+#ut-grid-container {
+    -fx-padding: 40px;
+    -fx-hgap: 20px;
+    -fx-vgap: 20px;
+}
+
+/* User Components */
+.ut-user-container {
+    -fx-background-color: -fx-color-background-dark;
+    -fx-background-radius: 4px;
+    -fx-padding: 10px 60px 10px 10px;
+    -fx-alignment: center;
+}
+.ut-user-avatar {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, .14, 0, 0);
+}
+.ut-user-right-container {
+    -fx-alignment: center;
+    -fx-padding: 0 0 0 20px;
+}
+.ut-user-button-container {
+    -fx-padding: 10px 0 0 0;
+    -fx-spacing: 10px;
+}
+.ut-user-button-container .plb-button {
+    -fx-font: 12pt "Raleway SemiBold";
+    -fx-padding: 2px 8px;
+}
