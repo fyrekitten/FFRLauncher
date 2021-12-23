@@ -191,6 +191,8 @@ public class UsersTab extends AbstractView<Pane> {
             lv.hide(viewScene);
         });
         switchUserTask.setOnFailed(event1 -> {
+            LOGGER.error("User switch failed! " + switchUserTask.getException().getMessage());
+            switchUserTask.getException().printStackTrace();
             lv.hide(viewScene);
         });
         lv.show(viewScene, () -> new Thread(switchUserTask).start());
@@ -225,6 +227,8 @@ public class UsersTab extends AbstractView<Pane> {
             lv.hide(viewScene);
         });
         removeUserTask.setOnFailed(event1 -> {
+            LOGGER.error("User logout failed! " + removeUserTask.getException().getMessage());
+            removeUserTask.getException().printStackTrace();
             lv.hide(viewScene);
         });
         lv.show(viewScene, () -> new Thread(removeUserTask).start());

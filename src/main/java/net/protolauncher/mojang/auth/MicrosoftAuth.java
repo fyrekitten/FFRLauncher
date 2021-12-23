@@ -253,7 +253,7 @@ public class MicrosoftAuth {
         HttpsURLConnection connection = Network.createConnection(new URL(mcsUrl + "entitlements/mcstore"), "GET", true);
         connection.setRequestProperty("Authorization", "Bearer " + accessToken);
 
-        String response = Network.stringify(Network.send(connection, false));
+        String response = Network.stringify(Network.send(connection, true));
         JsonObject obj = gson.fromJson(response, JsonObject.class);
         if (obj.get("items") != null) {
             JsonArray arr = obj.getAsJsonArray("items");

@@ -424,6 +424,67 @@ public class ProtoLauncher {
     }
 
     /**
+     * Refreshes a user's Microsoft login information.
+     *
+     * @param user The user to refresh login info for.
+     * @return null if the refresh failed, otherwise the user with an updated {@link MicrosoftInfo} and accessToken.
+     * @throws IOException Thrown if something goes wrong with a refresh request.
+     */
+    @Nullable
+    public User refreshUserMicrosoft(User user) throws IOException {
+        logger.debug("Refreshing Microsoft login for " + user.getUsername() + " (" + user.getUuid() + ")");
+
+        // Get Microsoft info
+        MicrosoftInfo mci = user.getMicrosoftInfo();
+        if (mci == null) {
+            return null;
+        }
+
+        // Authenticate with Microsoft
+        logger.debug("Refreshing Microsoft...");
+        MicrosoftResponse microsoftResponse = microsoftAuth.refreshMicrosoft(mci.getRefreshToken());
+        if (microsoftResponse.getError() != null) {
+            logger.debug("Microsoft refresh failed, user is invalid!");
+            return null;
+        }
+
+        // Authenticate with Xbox Live
+        logger.debug("Refreshing Xbox Live...");
+        XboxLiveResponse xboxLiveResponse;
+        try {
+            xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
+        } catch (Exception e) {
+            logger.debug("Microsoft or Xbox Live refresh failed, user is invalid!");
+            return null;
+        }
+        String uhs = xboxLiveResponse.getDisplayClaims().getXui()[0].getUhs();
+
+        // Authenticate with XSTS
+        logger.debug("Refreshing XSTS...");
+        XboxLiveResponse xstsResponse = microsoftAuth.authenticateXsts(xboxLiveResponse.getToken());
+
+        // Authenticate with Minecraft
+        logger.debug("Refreshing Minecraft...");
+        MinecraftResponse minecraftResponse = microsoftAuth.authenticateMinecraft(xstsResponse.getToken(), uhs);
+
+        // Update Microsoft Login Information
+        mci.setAccessToken(microsoftResponse.getAccessToken());
+        mci.setRefreshToken(microsoftResponse.getRefreshToken());
+        mci.setXblToken(xboxLiveResponse.getToken());
+        mci.setXblUhs(uhs);
+        mci.setXstsToken(xstsResponse.getToken());
+        mci.setDateExpires(System.currentTimeMillis() + (Long.parseLong(minecraftResponse.getExpiresIn()) * 1000 * 60));
+        user.setMicrosoftInfo(mci);
+
+        // Update access token
+        user.setAccessToken(minecraftResponse.getAccessToken());
+        logger.debug("Microsoft login refreshed.");
+
+        // Return the updated user
+        return user;
+    }
+
+    /**
      * Switches the launcher from one current user to another.
      *
      * @param user The user to switch to.
@@ -533,51 +594,36 @@ public class ProtoLauncher {
             // If it's not valid, attempt to refresh it (this process is a pain)
             if (!isValid) {
                 logger.debug("Microsoft login is invalid, attempting to refresh...");
-
-                // Authenticate with Microsoft
-                logger.debug("Refreshing Microsoft...");
-                MicrosoftResponse microsoftResponse = microsoftAuth.refreshMicrosoft(mci.getRefreshToken());
-                if (microsoftResponse.getError() != null) {
-                    logger.debug("Microsoft refresh failed, user is invalid!");
+                User updatedUser = this.refreshUserMicrosoft(user);
+                if (updatedUser == null) {
+                    logger.debug("Microsoft refresh failed, user is invalid.");
                     return false;
                 }
-
-                // Authenticate with Xbox Live
-                logger.debug("Refreshing Xbox Live...");
-                XboxLiveResponse xboxLiveResponse;
-                try {
-                    xboxLiveResponse = microsoftAuth.authenticateXboxLive(microsoftResponse.getAccessToken());
-                } catch (Exception e) {
-                    logger.debug("Microsoft or Xbox Live refresh failed, user is invalid!");
-                    return false;
-                }
-                String uhs = xboxLiveResponse.getDisplayClaims().getXui()[0].getUhs();
-
-                // Authenticate with XSTS
-                logger.debug("Refreshing XSTS...");
-                XboxLiveResponse xstsResponse = microsoftAuth.authenticateXsts(xboxLiveResponse.getToken());
-
-                // Authenticate with Minecraft
-                logger.debug("Refreshing Minecraft...");
-                MinecraftResponse minecraftResponse = microsoftAuth.authenticateMinecraft(xstsResponse.getToken(), uhs);
-
-                // Update Microsoft Login Information
                 changed = true;
-                mci.setAccessToken(microsoftResponse.getAccessToken());
-                mci.setRefreshToken(microsoftResponse.getRefreshToken());
-                mci.setXblToken(xboxLiveResponse.getToken());
-                mci.setXblUhs(uhs);
-                mci.setXstsToken(xstsResponse.getToken());
-                mci.setDateExpires(System.currentTimeMillis() + (Long.parseLong(minecraftResponse.getExpiresIn()) * 1000 * 60));
-                user.setMicrosoftInfo(mci);
-
-                // Update access token
-                user.setAccessToken(minecraftResponse.getAccessToken());
-                logger.debug("Microsoft login refreshed.");
+                user.setMicrosoftInfo(updatedUser.getMicrosoftInfo());
+                user.setAccessToken(updatedUser.getAccessToken());
             }
 
             // Verify game ownership
-            isValid = microsoftAuth.verifyOwnership(user.getAccessToken());
+            try {
+                isValid = microsoftAuth.verifyOwnership(user.getAccessToken());
+            } catch (IOException e) {
+                logger.debug("Microsoft login is invalid, attempting to refresh...");
+                User updatedUser = this.refreshUserMicrosoft(user);
+                if (updatedUser == null) {
+                    logger.debug("Microsoft refresh failed, user is invalid.");
+                    return false;
+                }
+                changed = true;
+                user.setMicrosoftInfo(updatedUser.getMicrosoftInfo());
+                user.setAccessToken(updatedUser.getAccessToken());
+                try {
+                    isValid = microsoftAuth.verifyOwnership(user.getAccessToken());
+                } catch (IOException e2) {
+                    logger.debug("Failed to verify ownership, user is invalid.");
+                    return false;
+                }
+            }
             if (!isValid) {
                 logger.debug("User does not own the game anymore and is therefore invalid!");
                 return false;
