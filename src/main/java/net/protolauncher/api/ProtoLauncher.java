@@ -514,7 +514,7 @@ public class ProtoLauncher {
                 this.switchProfile(profile);
 
                 // Check latest profiles
-                this.checkLatest(user.getUuid());
+                this.checkLatestProfiles(user.getUuid());
             }
         }
         logger.debug("User switched.");
@@ -718,11 +718,7 @@ public class ProtoLauncher {
      */
     @Nullable
     public List<Profile> getProfiles(String owner) {
-        if (!profiles.containsKey(owner)) {
-            return null;
-        } else {
-            return profiles.get(owner);
-        }
+        return profiles.getOrDefault(owner, null);
     }
 
     /**
@@ -905,8 +901,12 @@ public class ProtoLauncher {
             }
         }
 
+        // Force the version info the mark this as type snapshot (to prevent a latest release to mark this profile as existing)
+        VersionInfo modifiedVersionInfo = versionManifest.getLatestSnapshot().copy();
+        modifiedVersionInfo.setType(VersionType.SNAPSHOT);
+
         // Create profile
-        Profile profile = new Profile("Latest Snapshot", versionManifest.getLatestSnapshot(), owner);
+        Profile profile = new Profile("Latest Snapshot", modifiedVersionInfo, owner);
         profile.setVersion(profile.getVersion().setLatest(true));
 
         // Add profile
@@ -923,7 +923,7 @@ public class ProtoLauncher {
      * @param owner The UUID of the {@link User} to check the latest profiles for.
      * @throws IOException Thrown if checking the latest profiles fails.
      */
-    public void checkLatest(String owner) throws IOException {
+    public void checkLatestProfiles(String owner) throws IOException {
         logger.debug("Checking latest profiles for version updates.");
 
         // We can't check if the version manifest hasn't been loaded
@@ -960,7 +960,9 @@ public class ProtoLauncher {
                 if (!ver.getMinecraft().equals(latestSnapshotInfo.getId())) {
                     logger.debug("Profile " + profile.getName() + " has been updated to " + latestSnapshotInfo.getId());
                     updated = true;
-                    profile.setVersion(ver.setVersion(latestSnapshotInfo));
+                    VersionInfo latestSnapshotInfoCopy = versionManifest.getLatestSnapshot().copy();
+                    latestSnapshotInfoCopy.setType(VersionType.SNAPSHOT);
+                    profile.setVersion(ver.setVersion(latestSnapshotInfoCopy));
                     userProfiles.set(i, profile);
                 }
             }

@@ -13,3 +13,72 @@
 #npt-subtitle {
     -fx-font-size: 20pt;
 }
+
+/* Containers */
+#pt-scroll-container {
+    -fx-fit-to-width: true;
+    -fx-fill-height: true;
+}
+#pt-vertical-container {
+    -fx-padding: 40px 40px 140px 40px;
+    -fx-spacing: 20px;
+}
+
+/* Profile Components */
+.pt-profile-container {
+    -fx-background-color: -fx-color-background-dark;
+    -fx-background-radius: 4px;
+    -fx-padding: 15px;
+    -fx-border-width: 1px;
+    -fx-border-color: transparent;
+    -fx-focus-traversable: true;
+}
+.pt-profile-container:hover {
+    -fx-border-color: -fx-color-subtext;
+    -fx-cursor: hand;
+}
+.pt-profile-container:focused {
+    -fx-border-color: -fx-color-subtext;
+}
+.pt-profile-selected {
+    -fx-border-color: -fx-color-background-superlight;
+    -fx-focus-traversable: false;
+}
+.pt-profile-selected:hover {
+    -fx-border-color: -fx-color-background-superlight;
+    -fx-cursor: default;
+}
+.pt-profile-left-container {
+    -fx-alignment: center-left;
+}
+.pt-profile-image {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, .14, 0, 0);
+}
+.pt-profile-left-text-container {
+    -fx-padding: 0 0 0 15px;
+    -fx-alignment: center-left;
+}
+.pt-profile-name {
+    -fx-font: 19pt "Raleway Medium";
+}
+.pt-profile-game-version {
+    -fx-font: 14pt "Raleway";
+}
+.pt-profile-right-container {
+    -fx-alignment: center-right;
+}
+.pt-profile-edit-icon {
+    -fx-background-color: -fx-color-background-superlight;
+    -fx-min-height: 48px;
+    -fx-pref-height: 48px;
+    -fx-pref-width: 48px;
+    -fx-max-height: 48px;
+    -fx-focus-traversable: true;
+}
+.pt-profile-edit-icon:hover {
+    -fx-background-color: -fx-color-subtext;
+    -fx-cursor: hand;
+}
+.pt-profile-edit-icon:focused {
+    -fx-background-color: -fx-color-subtext;
+}
