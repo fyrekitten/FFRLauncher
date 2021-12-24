@@ -21,6 +21,7 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
 
     // References
     private final LoginDialog dialog;
+    private ProtoLauncher launcher;
 
     // Components
     private WebView view;
@@ -54,8 +55,10 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Fetch launcher
+        this.launcher = App.getInstance().getLauncher();
+
         // Fetch Microsoft URLs
-        ProtoLauncher launcher = App.getInstance().getLauncher();
         Endpoints endpoints = launcher.getConfig().getEndpoints();
         String clientId = endpoints.getMicrosoftApi().getClientId();
         URL oauthUrl = endpoints.getMicrosoftApi().getOauthAuthorizeUrl();
@@ -118,7 +121,7 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
         LauncherTask<User> loginTask = new LauncherTask<>() {
             @Override
             protected User call() throws Exception {
-                return App.getInstance().getLauncher().addUserMicrosoft(authCode);
+                return launcher.addUserMicrosoft(authCode);
             }
         };
 

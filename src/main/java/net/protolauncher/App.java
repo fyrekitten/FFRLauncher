@@ -168,6 +168,19 @@ public class App extends Application {
     }
 
     /**
+     * Fetches the current scene from the {@link Stage} to be a {@link ViewScene}.
+     * @return The {@link ViewScene} or null if the scene was not a {@link ViewScene}.
+     */
+    public ViewScene getSceneAsViewScene() {
+        if (stage.getScene() instanceof ViewScene) {
+            return (ViewScene) stage.getScene();
+        } else{
+            LOGGER.error("Scene was not a ViewScene!");
+            return null;
+        }
+    }
+
+    /**
      * Gets the resource and returns the corresponding URL.
      *
      * @param location The location of the resource as relative to <code>/</code>.

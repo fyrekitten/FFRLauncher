@@ -2,7 +2,6 @@ package net.protolauncher.ui.view;
 
 import javafx.event.ActionEvent;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -20,9 +19,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.protolauncher.App.LOGGER;
-
 public class MainView extends AbstractView<Pane> {
+
+    // References
+    private ProtoLauncher launcher;
 
     // Variables
     private Map<String, AbstractView<?>> tabs;
@@ -54,8 +54,10 @@ public class MainView extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Fetch launcher
+        this.launcher = App.getInstance().getLauncher();
+
         // Get current user
-        ProtoLauncher launcher = App.getInstance().getLauncher();
         User currentUser = launcher.getCurrentUser();
         Profile currentProfile = currentUser != null ? launcher.getCurrentProfile() : null;
 
@@ -250,15 +252,7 @@ public class MainView extends AbstractView<Pane> {
      * Handles the add button being pressed.
      */
     private void addButtonPressed(ActionEvent event) {
-        Scene scene = App.getInstance().getStage().getScene();
-        ViewScene viewScene;
-        if (scene instanceof ViewScene) {
-            viewScene = (ViewScene) scene;
-            viewScene.removeFocus();
-        } else {
-            LOGGER.error("Scene was not a ViewScene");
-            return;
-        }
+        ViewScene scene = App.getInstance().getSceneAsViewScene();
 
         if (currentTabId.equals("users")) {
             LoginDialog dialog = new LoginDialog(App.getInstance().getStage());
@@ -267,10 +261,10 @@ public class MainView extends AbstractView<Pane> {
                 User user = (User) dialog.getUserData();
                 if (user != null) {
                     LoadingView lv = new LoadingView();
-                    lv.show(viewScene, () -> {
-                        viewScene.refresh();
+                    lv.show(scene, () -> {
+                        scene.refresh();
                         System.gc();
-                        lv.hide(viewScene);
+                        lv.hide(scene);
                     });
                 }
             });

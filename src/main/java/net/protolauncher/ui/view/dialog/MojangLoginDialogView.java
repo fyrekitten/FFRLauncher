@@ -11,6 +11,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import net.protolauncher.App;
+import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.ui.components.PLButton;
 import net.protolauncher.ui.dialog.LoginDialog;
@@ -23,6 +24,7 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
 
     // References
     private final LoginDialog dialog;
+    private ProtoLauncher launcher;
 
     // Components
     private VBox vboxTopContainer;
@@ -49,6 +51,9 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Fetch launcher
+        this.launcher = App.getInstance().getLauncher();
+
         // Top Container
         vboxTopContainer = new VBox();
         vboxTopContainer.setId("mldv-top-container");
@@ -130,7 +135,7 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         LauncherTask<User> loginTask = new LauncherTask<>() {
             @Override
             protected User call() throws Exception {
-                return App.getInstance().getLauncher().addUserMojang(txtEmail.getText(), pwdPassword.getText());
+                return launcher.addUserMojang(txtEmail.getText(), pwdPassword.getText());
             }
         };
 

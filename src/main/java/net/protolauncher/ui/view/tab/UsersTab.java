@@ -3,7 +3,6 @@ package net.protolauncher.ui.view.tab;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.CacheHint;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
@@ -26,6 +25,9 @@ import static net.protolauncher.App.LOGGER;
 
 public class UsersTab extends AbstractView<Pane> {
 
+    // References
+    private ProtoLauncher launcher;
+
     // Components
     private PLScrollPane spScrollContainer;
     private GridPane gpGridContainer;
@@ -40,6 +42,9 @@ public class UsersTab extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Fetch launcher
+        this.launcher = App.getInstance().getLauncher();
+
         // Set users
         this.users = new ArrayList<>();
 
@@ -57,7 +62,7 @@ public class UsersTab extends AbstractView<Pane> {
         gpGridContainer.getColumnConstraints().addAll(constraints, constraints);
 
         // Construct Users
-        for (User user : App.getInstance().getLauncher().getAllUsers()) {
+        for (User user : launcher.getAllUsers()) {
             users.add(this.constructUser(user));
         }
     }
@@ -69,9 +74,6 @@ public class UsersTab extends AbstractView<Pane> {
      * @return A new user component.
      */
     private HBox constructUser(User user) {
-        // Get the launcher
-        ProtoLauncher launcher = App.getInstance().getLauncher();
-
         // Primary Container
         HBox hboxContainer = new HBox();
         hboxContainer.getStyleClass().add("ut-user-container");
@@ -163,22 +165,13 @@ public class UsersTab extends AbstractView<Pane> {
      * Handles a user's select button being pressed.
      */
     private void userSelectButtonPressed(ActionEvent event, User user) {
-        Scene scene = App.getInstance().getStage().getScene();
-        ViewScene viewScene;
-        if (scene instanceof ViewScene) {
-            viewScene = (ViewScene) scene;
-            viewScene.removeFocus();
-        } else {
-            LOGGER.error("Scene was not a ViewScene");
-            return;
-        }
+        ViewScene scene = App.getInstance().getSceneAsViewScene();
 
         // Switch user task
         LoadingView lv = new LoadingView();
         Task<Void> switchUserTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                ProtoLauncher launcher = App.getInstance().getLauncher();
                 launcher.switchUser(user);
                 launcher.validateUser(user.getUuid());
                 // TODO: Prompt user to log in again if their user is invalid
@@ -186,52 +179,44 @@ public class UsersTab extends AbstractView<Pane> {
             }
         };
         switchUserTask.setOnSucceeded(event1 -> {
-            viewScene.refresh();
+            scene.refresh();
             System.gc();
-            lv.hide(viewScene);
+            lv.hide(scene);
         });
         switchUserTask.setOnFailed(event1 -> {
             LOGGER.error("User switch failed! " + switchUserTask.getException().getMessage());
             switchUserTask.getException().printStackTrace();
-            lv.hide(viewScene);
+            lv.hide(scene);
         });
-        lv.show(viewScene, () -> new Thread(switchUserTask).start());
+        lv.show(scene, () -> new Thread(switchUserTask).start());
     }
 
     /**
      * Handles a user's logout button being pressed.
      */
     private void userLogoutButtonPressed(ActionEvent event, User user) {
-        Scene scene = App.getInstance().getStage().getScene();
-        ViewScene viewScene;
-        if (scene instanceof ViewScene) {
-            viewScene = (ViewScene) scene;
-            viewScene.removeFocus();
-        } else {
-            LOGGER.error("Scene was not a ViewScene");
-            return;
-        }
+        ViewScene scene = App.getInstance().getSceneAsViewScene();
 
         // Remove user task
         LoadingView lv = new LoadingView();
         Task<Void> removeUserTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                App.getInstance().getLauncher().removeUser(user);
+                launcher.removeUser(user);
                 return null;
             }
         };
         removeUserTask.setOnSucceeded(event1 -> {
-            viewScene.refresh();
+            scene.refresh();
             System.gc();
-            lv.hide(viewScene);
+            lv.hide(scene);
         });
         removeUserTask.setOnFailed(event1 -> {
             LOGGER.error("User logout failed! " + removeUserTask.getException().getMessage());
             removeUserTask.getException().printStackTrace();
-            lv.hide(viewScene);
+            lv.hide(scene);
         });
-        lv.show(viewScene, () -> new Thread(removeUserTask).start());
+        lv.show(scene, () -> new Thread(removeUserTask).start());
     }
 
 }

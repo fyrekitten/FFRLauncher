@@ -1,9 +1,11 @@
 package net.protolauncher.ui.view.tab;
 
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.shape.SVGPath;
 import net.protolauncher.App;
@@ -20,6 +22,9 @@ import java.util.Objects;
 
 public class ProfilesTab extends AbstractView<Pane> {
 
+    // References
+    private ProtoLauncher launcher;
+
     // Components
     private PLScrollPane spScrollContainer;
     private VBox vboxVerticalContainer;
@@ -34,6 +39,9 @@ public class ProfilesTab extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Fetch launcher
+        this.launcher = App.getInstance().getLauncher();
+
         // Set profiles
         this.profiles = new ArrayList<>();
 
@@ -48,7 +56,6 @@ public class ProfilesTab extends AbstractView<Pane> {
         vboxVerticalContainer.setId("pt-vertical-container");
 
         // Construct Profiles
-        ProtoLauncher launcher = App.getInstance().getLauncher();
         for (Profile profile : Objects.requireNonNull(launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()))) {
             profiles.add(this.constructProfile(profile));
         }
@@ -61,14 +68,16 @@ public class ProfilesTab extends AbstractView<Pane> {
      * @return A new profile component.
      */
     private HBox constructProfile(Profile profile) {
-        // Get the launcher
-        ProtoLauncher launcher = App.getInstance().getLauncher();
-
         // Primary Container
         HBox hboxContainer = new HBox();
         hboxContainer.getStyleClass().add("pt-profile-container");
         HBox.setHgrow(hboxContainer, Priority.ALWAYS);
-        // TODO: Mouse clicked, key pressed (spacebar)
+        hboxContainer.setOnMouseClicked(event -> this.profileContainerPressed(profile));
+        hboxContainer.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.SPACE && ((Parent) event.getSource()).isFocused()) {
+                this.profileContainerPressed(profile);
+            }
+        });
 
         // Add selected class if current profile
         if (launcher.getConfig().getCurrentProfileUuid().equals(profile.getUuid())) {
@@ -123,7 +132,15 @@ public class ProfilesTab extends AbstractView<Pane> {
         regEditIcon.setShape(svgEditIcon);
         regEditIcon.getStyleClass().add("pt-profile-edit-icon");
         regEditIcon.setPickOnBounds(true);
-        // TODO: Edit icon mouseclick & spacebar
+        regEditIcon.setOnMouseClicked(event -> {
+            this.profileEditButtonPressed(profile);
+            event.consume();
+        });
+        regEditIcon.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.SPACE && ((Parent) event.getSource()).isFocused()) {
+                this.profileEditButtonPressed(profile);
+            }
+        });
 
         // Registration
         vboxLeftTextContainer.getChildren().addAll(lblName, lblGameVersion);
@@ -148,6 +165,20 @@ public class ProfilesTab extends AbstractView<Pane> {
         spScrollContainer.setContent(vboxVerticalContainer);
         spScrollContainer.applyScrollMultiplier();
         layout.getChildren().add(spScrollContainer);
+    }
+
+    /**
+     * Handles a profile's container being pressed.
+     */
+    private void profileContainerPressed(Profile profile) {
+        System.out.println("Profile container pressed!");
+    }
+
+    /**
+     * Handles a profile's edit button being pressed.
+     */
+    private void profileEditButtonPressed(Profile profile) {
+        System.out.println("Profile edit button pressed!");
     }
 
 }
