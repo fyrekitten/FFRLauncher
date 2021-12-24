@@ -515,6 +515,8 @@ public class ProtoLauncher {
 
                 // Check latest profiles
                 this.checkLatestProfiles(user.getUuid());
+            } else {
+                this.switchProfile(null);
             }
         }
         logger.debug("User switched.");

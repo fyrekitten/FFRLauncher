@@ -1,12 +1,12 @@
 package net.protolauncher.ui.view;
 
 import javafx.event.ActionEvent;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
@@ -16,23 +16,13 @@ import net.protolauncher.ui.dialog.LoginDialog;
 import net.protolauncher.ui.view.tab.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-public class MainView extends AbstractView<Pane> {
+public class MainView extends AbstractTabView {
 
     // References
     private ProtoLauncher launcher;
 
-    // Variables
-    private Map<String, AbstractView<?>> tabs;
-    private String currentTabId;
-
     // Components
-    private BorderPane bpTabContainer;
-    private HBox hboxTabHeaderContainer;
-    private Map<String, HBox> hboxTabHeaders;
-    private Region regTabHeaderSeparator;
     private VBox vboxAddButtonContainer;
     private Button btnAddButton;
     private VBox vboxAttributionContainer;
@@ -40,8 +30,7 @@ public class MainView extends AbstractView<Pane> {
 
     // Constructor
     public MainView() {
-        super(new Pane(),
-            "Colors.css",
+        super("Colors.css",
             "Components.css",
             "view/MainView.css",
             "view/tab/PlayTab.css",
@@ -54,6 +43,9 @@ public class MainView extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Call super
+        super.construct();
+
         // Fetch launcher
         this.launcher = App.getInstance().getLauncher();
 
@@ -61,65 +53,18 @@ public class MainView extends AbstractView<Pane> {
         User currentUser = launcher.getCurrentUser();
         Profile currentProfile = currentUser != null ? launcher.getCurrentProfile() : null;
 
-        // Set lists
-        this.tabs = new HashMap<>();
-        this.hboxTabHeaders = new HashMap<>();
-
-        // Tab Container
-        bpTabContainer = new BorderPane();
-        bpTabContainer.setId("mv-tab-container");
-        bpTabContainer.prefWidthProperty().bind(this.getLayout().widthProperty());
-        bpTabContainer.prefHeightProperty().bind(this.getLayout().heightProperty());
-
-        // Tab Header Container
-        hboxTabHeaderContainer = new HBox();
-        hboxTabHeaderContainer.setId("mv-tab-header-container");
-
         // Tabs
-        tabs.put("play", new PlayTab());
+        this.constructTab("pt", "play", "Play", new PlayTab());
         if (currentProfile == null) {
-            tabs.put("profiles", new NoProfilesTab());
+            this.constructTab("nprt", "profiles", "Profiles", new NoProfilesTab());
         } else {
-            tabs.put("profiles", new ProfilesTab());
+            this.constructTab("prt", "profiles", "Profiles", new ProfilesTab());
         }
         if (currentUser == null) {
-            tabs.put("users", new NoUsersTab());
+            this.constructTab("nut", "users", "No Users", new NoUsersTab());
         } else {
-            tabs.put("users", new UsersTab());
+            this.constructTab("ut", "users", currentUser.getUsername(), new UsersTab());
         }
-
-        // Tab Headers
-        hboxTabHeaders.put("play", this.constructTabHeader("pt", "play", "Play"));
-        hboxTabHeaders.put("profiles", this.constructTabHeader("prt", "profiles", "Profiles"));
-        if (currentUser == null) {
-            hboxTabHeaders.put("users", this.constructTabHeader("nut", "users", "No Users"));
-        } else {
-            // If the user exists, then we have a different header for that one
-            HBox hboxHeader = this.constructTabHeader("ut", "users", currentUser.getUsername());
-            ImageView ivAvatar;
-            try {
-                ivAvatar = new ImageView(launcher.fetchUserAvatar(currentUser.getUuid()).toAbsolutePath().toUri().toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-                try {
-                    ivAvatar = new ImageView(launcher.fetchUserAvatar(null).toAbsolutePath().toUri().toString());
-                } catch (IOException e2) {
-                    // Why are we still here? Just to suffer?
-                    e2.printStackTrace();
-                    ivAvatar = new ImageView();
-                }
-            }
-            ivAvatar.setSmooth(false);
-            ivAvatar.setFitWidth(24);
-            ivAvatar.setFitHeight(24);
-            hboxHeader.getChildren().add(ivAvatar);
-            hboxTabHeaders.put("users", hboxHeader);
-        }
-
-        // Tab Separator
-        regTabHeaderSeparator = new Region();
-        regTabHeaderSeparator.setId("mv-tab-header-separator");
-        HBox.setHgrow(regTabHeaderSeparator, Priority.ALWAYS);
 
         // Attribution Container
         vboxAttributionContainer = new VBox();
@@ -148,50 +93,41 @@ public class MainView extends AbstractView<Pane> {
         btnAddButton.setOnAction(this::addButtonPressed);
 
         // Switch to the default tab
-        this.currentTabId = "play";
         this.switchTab("play", true);
+
+        // Set tab right index
+        this.setRightIndex(this.getTabCount() - 1);
     }
 
-    /**
-     * Constructs a new header for a tab.
-     *
-     * @param cssId The CSS id for this tab.
-     * @param id The id for this tab.
-     * @param name The name of this tab to be used in the header label.
-     */
-    private HBox constructTabHeader(String cssId, String id, String name) {
-        // Container
-        HBox header = new HBox();
-        header.setId(cssId + "-header");
-
-        // Label
-        Label label = new Label(name);
-        label.setMouseTransparent(true);
-        header.getChildren().add(label);
-
-        // Set events
-        header.setOnMouseClicked(event -> this.switchTab(id));
-        header.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.SPACE && ((Parent) event.getSource()).isFocused()) {
-                this.switchTab(id);
+    @Override
+    protected HBox constructTabHeader(String cssId, String id, String name) {
+        HBox hboxHeader = super.constructTabHeader(cssId, id, name);
+        if (cssId.equals("ut")) {
+            ImageView ivAvatar;
+            try {
+                ivAvatar = new ImageView(launcher.fetchUserAvatar(launcher.getConfig().getCurrentUserUuid()).toAbsolutePath().toUri().toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    ivAvatar = new ImageView(launcher.fetchUserAvatar(null).toAbsolutePath().toUri().toString());
+                } catch (IOException e2) {
+                    // Why are we still here? Just to suffer?
+                    e2.printStackTrace();
+                    ivAvatar = new ImageView();
+                }
             }
-        });
-
-        // Return header
-        return header;
+            ivAvatar.setSmooth(false);
+            ivAvatar.setFitWidth(24);
+            ivAvatar.setFitHeight(24);
+            hboxHeader.getChildren().add(ivAvatar);
+        }
+        return hboxHeader;
     }
 
     @Override
     protected void register() {
+        super.register();
         Pane layout = this.getLayout();
-        hboxTabHeaderContainer.getChildren().addAll(
-            hboxTabHeaders.get("play"),
-            hboxTabHeaders.get("profiles"),
-            regTabHeaderSeparator,
-            hboxTabHeaders.get("users")
-        );
-        bpTabContainer.setTop(hboxTabHeaderContainer);
-        layout.getChildren().add(bpTabContainer);
         vboxAddButtonContainer.getChildren().add(btnAddButton);
         layout.getChildren().add(vboxAddButtonContainer);
         vboxAttributionContainer.getChildren().add(lblAttribution);
@@ -199,53 +135,15 @@ public class MainView extends AbstractView<Pane> {
     }
 
     @Override
-    public void refresh() {
-        String previousTabId = currentTabId;
-        this.tabs.clear();
-        super.refresh();
-        this.switchTab(previousTabId);
-    }
+    protected void switchTab(String tabId, boolean force) {
+        super.switchTab(tabId, force);
 
-    /**
-     * Switches from the current tab to the requested tab.
-     *
-     * @param tabId The id of the tab to change to.
-     * @param force Force a switch even if the tab id is the same as the current tab.
-     */
-    public void switchTab(String tabId, boolean force) {
-        if (force || !currentTabId.equals(tabId)) {
-            // Remove styles on current tab header
-            HBox oldHeader = hboxTabHeaders.getOrDefault(currentTabId, null);
-            if (oldHeader != null) {
-                oldHeader.getStyleClass().remove("current");
-            }
-
-            // Add styles to new tab header
-            HBox newHeader = hboxTabHeaders.get(tabId);
-            newHeader.getStyleClass().add("current");
-            newHeader.requestFocus();
-
-            // Change add button visibility
-            if (tabId.equals("profiles") || tabId.equals("users")) {
-                btnAddButton.getStyleClass().remove("invisible");
-            } else if (!btnAddButton.getStyleClass().contains("invisible")) {
-                btnAddButton.getStyleClass().add("invisible");
-            }
-
-            // Set the current tab
-            AbstractView<?> tab = tabs.get(tabId);
-            currentTabId = tabId;
-            bpTabContainer.setCenter(tab.getLayout());
+        // Change add button visibility
+        if (tabId.equals("profiles") || tabId.equals("users")) {
+            btnAddButton.getStyleClass().remove("invisible");
+        } else if (!btnAddButton.getStyleClass().contains("invisible")) {
+            btnAddButton.getStyleClass().add("invisible");
         }
-    }
-
-    /**
-     * Swicthes from the current tab to the requested tab.
-     *
-     * @param tabId The id of the tab to change to.
-     */
-    public void switchTab(String tabId) {
-        this.switchTab(tabId, false);
     }
 
     /**
@@ -253,8 +151,7 @@ public class MainView extends AbstractView<Pane> {
      */
     private void addButtonPressed(ActionEvent event) {
         ViewScene scene = App.getInstance().getSceneAsViewScene();
-
-        if (currentTabId.equals("users")) {
+        if (this.getCurrentTabId().equals("users")) {
             LoginDialog dialog = new LoginDialog(App.getInstance().getStage());
             dialog.setOnHidden(hiddenEvent -> {
                 // Get the user and if the user is not null, refresh the scene
@@ -269,7 +166,7 @@ public class MainView extends AbstractView<Pane> {
                 }
             });
             dialog.show();
-        } else if (currentTabId.equals("profiles")) {
+        } else if (this.getCurrentTabId().equals("profiles")) {
             System.out.println("Add profiles prompt!");
         }
     }

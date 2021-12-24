@@ -89,6 +89,34 @@
     visibility: hidden;
 }
 
+/* Tabs */
+.tab-header-container {
+    -fx-background-color: -fx-color-background-light;
+    -fx-min-height: 55px;
+}
+.tab-header-container HBox {
+    -fx-focus-traversable: true;
+}
+.tab-header-container HBox:hover {
+    -fx-cursor: hand;
+    -fx-background-color: -fx-color-background-superlight;
+}
+.tab-header-container HBox:focused {
+    -fx-background-color: -fx-color-background-superlight;
+}
+.tab-header-container HBox.current {
+    -fx-background-color: -fx-color-background;
+}
+.tab-header-container HBox.current:hover {
+    -fx-cursor: default;
+}
+.tab-header-container HBox Label {
+    -fx-pref-height: 55px;
+    -fx-padding: 0 16px;
+    -fx-alignment: center;
+    -fx-font: 18pt "Raleway";
+}
+
 /* ProtoLauncher Button */
 .plb-container {
     -fx-border-color: black;
