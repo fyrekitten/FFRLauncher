@@ -1,5 +1,6 @@
 package net.protolauncher.ui.view.tab;
 
+import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -12,13 +13,17 @@ import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.mojang.version.VersionType;
+import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.components.PLScrollPane;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.LoadingView;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static net.protolauncher.App.LOGGER;
 
 public class ProfilesTab extends AbstractView<Pane> {
 
@@ -171,7 +176,28 @@ public class ProfilesTab extends AbstractView<Pane> {
      * Handles a profile's container being pressed.
      */
     private void profileContainerPressed(Profile profile) {
-        System.out.println("Profile container pressed!");
+        ViewScene scene = App.getInstance().getSceneAsViewScene();
+
+        // Switch profile task
+        LoadingView lv = new LoadingView();
+        Task<Void> switchProfileTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                launcher.switchProfile(profile);
+                return null;
+            }
+        };
+        switchProfileTask.setOnSucceeded(event1 -> {
+            scene.refresh();
+            System.gc();
+            lv.hide(scene);
+        });
+        switchProfileTask.setOnFailed(event1 -> {
+            LOGGER.error("Profile switch failed! " + switchProfileTask.getException().getMessage());
+            switchProfileTask.getException().printStackTrace();
+            lv.hide(scene);
+        });
+        lv.show(scene, () -> new Thread(switchProfileTask).start());
     }
 
     /**
