@@ -15,8 +15,10 @@ import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.mojang.version.VersionType;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.components.PLScrollPane;
+import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.AbstractView;
 import net.protolauncher.ui.view.LoadingView;
+import net.protolauncher.ui.view.dialog.ProfileDialogView;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -204,7 +206,12 @@ public class ProfilesTab extends AbstractView<Pane> {
      * Handles a profile's edit button being pressed.
      */
     private void profileEditButtonPressed(Profile profile) {
-        System.out.println("Profile edit button pressed!");
+        ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
+        dialog.setUserData(profile);
+        // TODO: On hidden refresh
+        ProfileDialogView view = new ProfileDialogView(dialog);
+        ((ViewScene) dialog.getScene()).addView(view);
+        dialog.show();
     }
 
 }

@@ -14,6 +14,8 @@ import net.protolauncher.api.User;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.dialog.LoginDialog;
 import net.protolauncher.ui.dialog.ProfileDialog;
+import net.protolauncher.ui.view.dialog.LoginDialogView;
+import net.protolauncher.ui.view.dialog.ProfileDialogView;
 import net.protolauncher.ui.view.tab.*;
 
 import java.io.IOException;
@@ -166,9 +168,14 @@ public class MainView extends AbstractTabView {
                     });
                 }
             });
+            LoginDialogView view = new LoginDialogView(dialog);
+            ((ViewScene) dialog.getScene()).addView(view);
             dialog.show();
         } else if (this.getCurrentTabId().equals("profiles")) {
             ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
+            // TODO: On hidden refresh
+            ProfileDialogView view = new ProfileDialogView(dialog);
+            ((ViewScene) dialog.getScene()).addView(view);
             dialog.show();
         }
     }
