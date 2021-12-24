@@ -13,6 +13,7 @@ import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.dialog.LoginDialog;
+import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.tab.*;
 
 import java.io.IOException;
@@ -167,7 +168,8 @@ public class MainView extends AbstractTabView {
             });
             dialog.show();
         } else if (this.getCurrentTabId().equals("profiles")) {
-            System.out.println("Add profiles prompt!");
+            ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
+            dialog.show();
         }
     }
 
