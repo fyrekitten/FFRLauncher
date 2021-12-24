@@ -8,6 +8,8 @@ public class ProfileInfoTab extends AbstractView<Pane> {
     // Constructor
     public ProfileInfoTab() {
         super(new Pane());
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

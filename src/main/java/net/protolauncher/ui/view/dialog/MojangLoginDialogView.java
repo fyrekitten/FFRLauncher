@@ -43,6 +43,8 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
     public MojangLoginDialogView(LoginDialog dialog) {
         super(new VBox(), "Colors.css", "Components.css", "view/dialog/LoginDialogView.css", "view/dialog/MojangLoginDialogView.css");
         this.dialog = dialog;
+        this.construct();
+        this.register();
 
         // Add login button keybind
         dialog.getScene().getAccelerators().put(new KeyCodeCombination(KeyCode.ENTER), () -> btnLogin.getButton().fire());

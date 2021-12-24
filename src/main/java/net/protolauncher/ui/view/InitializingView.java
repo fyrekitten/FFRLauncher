@@ -26,6 +26,8 @@ public class InitializingView extends AbstractView<StackPane> implements ILogLis
     public InitializingView() {
         super(new StackPane(), "Colors.css", "Components.css", "view/InitializingView.css");
         this.getLayout().setId("iv-layout");
+        this.construct();
+        this.register();
         LogPassthroughAppender.registerListener(this);
     }
 

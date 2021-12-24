@@ -31,6 +31,8 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
     public MicrosoftLoginDialogView(LoginDialog dialog) {
         super(new Pane(), "Colors.css", "Components.css", "view/dialog/LoginDialogView.css");
         this.dialog = dialog;
+        this.construct();
+        this.register();
 
         // Remove focus removal
         this.dialog.getScene().getRoot().setOnMouseClicked(null);
@@ -46,10 +48,6 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
         this.dialog.setHeight(600);
         this.dialog.setX(prevX + (prevWidth / 2) - (this.dialog.getWidth() / 2));
         this.dialog.setY(prevY + (prevHeight / 2) - (this.dialog.getHeight() / 2));
-
-        // Bind width and height
-        view.prefWidthProperty().bind(this.dialog.widthProperty());
-        view.prefHeightProperty().bind(this.dialog.heightProperty());
     }
 
     // AbstractView Implementation
@@ -69,6 +67,8 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
 
         // Web View
         view = new WebView();
+        view.prefWidthProperty().bind(this.dialog.widthProperty());
+        view.prefHeightProperty().bind(this.dialog.heightProperty());
 
         // Web Engine
         engine = view.getEngine();

@@ -9,6 +9,8 @@ public class PlayTab extends AbstractView<StackPane> {
     public PlayTab() {
         super(new StackPane());
         this.getLayout().setId("plt-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

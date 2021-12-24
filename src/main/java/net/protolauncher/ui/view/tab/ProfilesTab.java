@@ -30,7 +30,7 @@ import static net.protolauncher.App.LOGGER;
 public class ProfilesTab extends AbstractView<Pane> {
 
     // References
-    private ProtoLauncher launcher;
+    private final ProtoLauncher launcher;
 
     // Components
     private PLScrollPane spScrollContainer;
@@ -40,15 +40,15 @@ public class ProfilesTab extends AbstractView<Pane> {
     // Constructor
     public ProfilesTab() {
         super(new Pane());
+        this.launcher = App.getInstance().getLauncher();
         this.getLayout().setId("pt-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation
     @Override
     protected void construct() {
-        // Fetch launcher
-        this.launcher = App.getInstance().getLauncher();
-
         // Set profiles
         this.profiles = new ArrayList<>();
 
@@ -63,6 +63,7 @@ public class ProfilesTab extends AbstractView<Pane> {
         vboxVerticalContainer.setId("pt-vertical-container");
 
         // Construct Profiles
+        // TODO: Order by last played.
         for (Profile profile : Objects.requireNonNull(launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()))) {
             profiles.add(this.constructProfile(profile));
         }
@@ -206,9 +207,18 @@ public class ProfilesTab extends AbstractView<Pane> {
      * Handles a profile's edit button being pressed.
      */
     private void profileEditButtonPressed(Profile profile) {
+        ViewScene scene = App.getInstance().getSceneAsViewScene();
         ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
         dialog.setUserData(profile);
-        // TODO: On hidden refresh
+        dialog.setOnHidden(hiddenEvent -> {
+            // Refresh the scene
+            LoadingView lv = new LoadingView();
+            lv.show(scene, () -> {
+                scene.refresh();
+                System.gc();
+                lv.hide(scene);
+            });
+        });
         ProfileDialogView view = new ProfileDialogView(dialog);
         ((ViewScene) dialog.getScene()).addView(view);
         dialog.show();

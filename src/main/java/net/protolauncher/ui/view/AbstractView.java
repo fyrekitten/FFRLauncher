@@ -29,8 +29,6 @@ public abstract class AbstractView<L extends Pane> {
         this.layout = layout;
         this.layout.getStyleClass().add("layout");
         this.stylesheets = stylesheets;
-        this.construct();
-        this.register();
     }
 
     /**

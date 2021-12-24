@@ -24,6 +24,8 @@ public class LoginDialogView extends AbstractView<HBox> {
         super(new HBox(), "Colors.css", "Components.css", "view/dialog/LoginDialogView.css");
         this.dialog = dialog;
         this.getLayout().setId("ldv-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

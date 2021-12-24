@@ -14,6 +14,8 @@ public class NoProfilesTab extends AbstractView<VBox> {
     public NoProfilesTab() {
         super(new VBox());
         this.getLayout().setId("npt-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

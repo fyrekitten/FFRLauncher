@@ -23,7 +23,7 @@ import java.io.IOException;
 public class MainView extends AbstractTabView {
 
     // References
-    private ProtoLauncher launcher;
+    private final ProtoLauncher launcher;
 
     // Components
     private VBox vboxAddButtonContainer;
@@ -40,7 +40,10 @@ public class MainView extends AbstractTabView {
             "view/tab/ProfilesTab.css",
             "view/tab/UsersTab.css"
         );
+        this.launcher = App.getInstance().getLauncher();
         this.getLayout().setId("mv-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation
@@ -48,9 +51,6 @@ public class MainView extends AbstractTabView {
     protected void construct() {
         // Call super
         super.construct();
-
-        // Fetch launcher
-        this.launcher = App.getInstance().getLauncher();
 
         // Get current user
         User currentUser = launcher.getCurrentUser();
@@ -173,6 +173,18 @@ public class MainView extends AbstractTabView {
             dialog.show();
         } else if (this.getCurrentTabId().equals("profiles")) {
             ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
+            dialog.setOnHidden(hiddenEvent -> {
+                // Get the profile and if the profile is not null, refresh the scene
+                Profile profile = (Profile) dialog.getUserData();
+                if (profile != null) {
+                    LoadingView lv = new LoadingView();
+                    lv.show(scene, () -> {
+                        scene.refresh();
+                        System.gc();
+                        lv.hide(scene);
+                    });
+                }
+            });
             // TODO: On hidden refresh
             ProfileDialogView view = new ProfileDialogView(dialog);
             ((ViewScene) dialog.getScene()).addView(view);

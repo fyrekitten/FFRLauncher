@@ -26,7 +26,7 @@ import static net.protolauncher.App.LOGGER;
 public class UsersTab extends AbstractView<Pane> {
 
     // References
-    private ProtoLauncher launcher;
+    private final ProtoLauncher launcher;
 
     // Components
     private PLScrollPane spScrollContainer;
@@ -36,15 +36,15 @@ public class UsersTab extends AbstractView<Pane> {
     // Constructor
     public UsersTab() {
         super(new Pane());
+        this.launcher = App.getInstance().getLauncher();
         this.getLayout().setId("ut-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation
     @Override
     protected void construct() {
-        // Fetch launcher
-        this.launcher = App.getInstance().getLauncher();
-
         // Set users
         this.users = new ArrayList<>();
 

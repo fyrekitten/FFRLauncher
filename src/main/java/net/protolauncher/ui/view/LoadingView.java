@@ -36,6 +36,8 @@ public class LoadingView extends AbstractView<Pane> {
     public LoadingView() {
         super(new Pane(), "Colors.css", "Components.css", "view/LoadingView.css");
         this.getLayout().setId("lv-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

@@ -14,6 +14,8 @@ public class NoUsersTab extends AbstractView<VBox> {
     public NoUsersTab() {
         super(new VBox());
         this.getLayout().setId("nut-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation

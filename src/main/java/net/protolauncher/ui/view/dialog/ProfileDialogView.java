@@ -14,6 +14,8 @@ public class ProfileDialogView extends AbstractTabView {
         super("Colors.css", "Components.css", "view/dialog/ProfileDialogView.css");
         this.dialog = dialog;
         this.getLayout().setId("pdv-layout");
+        this.construct();
+        this.register();
     }
 
     // AbstractView Implementation
