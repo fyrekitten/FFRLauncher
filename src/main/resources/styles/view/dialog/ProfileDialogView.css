@@ -1,0 +1,7 @@
+/* Containers */
+#pdbv-layout {
+    -fx-background-color: -fx-color-background-light;
+    -fx-alignment: center-right;
+    -fx-padding: 5px 10px 5px 0;
+    -fx-spacing: 5px;
+}

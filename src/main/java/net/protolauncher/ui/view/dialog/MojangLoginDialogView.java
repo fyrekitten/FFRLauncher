@@ -167,6 +167,7 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         // AbstractView Implementation
         @Override
         protected void construct() {
+            // Call super
             super.construct();
 
             // Buttons
