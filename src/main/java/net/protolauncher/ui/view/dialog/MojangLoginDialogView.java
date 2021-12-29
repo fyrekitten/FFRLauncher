@@ -6,16 +6,15 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import net.protolauncher.App;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
-import net.protolauncher.ui.components.PLButton;
 import net.protolauncher.ui.dialog.LoginDialog;
 import net.protolauncher.ui.task.LauncherTask;
+import net.protolauncher.ui.view.AbstractButtonView;
 import net.protolauncher.ui.view.AbstractView;
 
 import static net.protolauncher.App.LOGGER;
@@ -28,16 +27,13 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
 
     // Components
     private VBox vboxTopContainer;
-    private Region regSeparator;
-    private HBox hboxBottomContainer;
     private Label lblEmail;
     private TextField txtEmail;
     private Label lblPassword;
     private PasswordField pwdPassword;
     private Label lblStatus;
-    private PLButton btnLogin;
-    private Region btnSeparator;
-    private PLButton btnCancel;
+    private Region regSeparator;
+    private MojangLoginDialogButtonView abvButtons;
 
     // Constructor
     public MojangLoginDialogView(LoginDialog dialog) {
@@ -47,7 +43,7 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         this.register();
 
         // Add login button keybind
-        dialog.getScene().getAccelerators().put(new KeyCodeCombination(KeyCode.ENTER), () -> btnLogin.getButton().fire());
+        dialog.getScene().getAccelerators().put(new KeyCodeCombination(KeyCode.ENTER), () -> abvButtons.getButton("login").getButton().fire());
     }
 
     // AbstractView Implementation
@@ -64,10 +60,6 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         regSeparator = new Region();
         regSeparator.setId("mldv-separator");
         VBox.setVgrow(regSeparator, Priority.ALWAYS);
-
-        // Bottom Container
-        hboxBottomContainer = new HBox();
-        hboxBottomContainer.setId("mldv-bottom-container");
 
         // Email Label
         lblEmail = new Label("Email or Username");
@@ -90,20 +82,8 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         lblStatus.getStyleClass().add("good");
         lblStatus.setId("mldv-status-label");
 
-        // Login Button
-        btnLogin = new PLButton("Login");
-        btnLogin.getButton().setId("mldv-button-login");
-        btnLogin.getButton().setOnAction(this::loginButtonPressed);
-
-        // Separator
-        btnSeparator = new Region();
-        btnSeparator.setId("mldv-button-separator");
-
-        // Cancel Button
-        btnCancel = new PLButton("Cancel");
-        btnCancel.getStyleClass().add("red");
-        btnCancel.setId("mldv-button-cancel");
-        btnCancel.getButton().setOnAction(this::cancelButtonPressed);
+        // Buttons
+        abvButtons = new MojangLoginDialogButtonView();
     }
 
     @Override
@@ -112,8 +92,7 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         vboxTopContainer.getChildren().addAll(lblEmail, txtEmail, lblPassword, pwdPassword, lblStatus);
         layout.getChildren().add(vboxTopContainer);
         layout.getChildren().add(regSeparator);
-        hboxBottomContainer.getChildren().addAll(btnLogin, btnSeparator, btnCancel);
-        layout.getChildren().add(hboxBottomContainer);
+        layout.getChildren().add(abvButtons.getLayout());
     }
 
     /**
@@ -121,8 +100,8 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
      */
     private void loginButtonPressed(ActionEvent event) {
         // Disable buttons
-        btnLogin.setDisable(true);
-        btnCancel.setDisable(true);
+        abvButtons.getButton("login").setDisable(true);
+        abvButtons.getButton("cancel").setDisable(true);
         txtEmail.setDisable(true);
         pwdPassword.setDisable(true);
 
@@ -155,8 +134,8 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
             lblStatus.getStyleClass().add("bad");
 
             // Re-enable buttons
-            btnLogin.setDisable(false);
-            btnCancel.setDisable(false);
+            abvButtons.getButton("login").setDisable(false);
+            abvButtons.getButton("cancel").setDisable(false);
             txtEmail.setDisable(false);
             pwdPassword.setDisable(false);
         });
@@ -170,6 +149,34 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
      */
     private void cancelButtonPressed(ActionEvent event) {
         dialog.hide();
+    }
+
+    /**
+     * Represents the button view for the mojang login dialog view.
+     */
+    public class MojangLoginDialogButtonView extends AbstractButtonView {
+
+        // Constructor
+        public MojangLoginDialogButtonView() {
+            super();
+            this.getLayout().setId("mldbv-layout");
+            this.construct();
+            this.register();
+        }
+
+        // AbstractView Implementation
+        @Override
+        protected void construct() {
+            super.construct();
+
+            // Buttons
+            this.constructButton("mldv-button-login", "login", "Login", MojangLoginDialogView.this::loginButtonPressed);
+            this.constructButton("mldv-button-cancel", "cancel", "Cancel", MojangLoginDialogView.this::cancelButtonPressed);
+
+            // Add "red" to cancel button
+            this.getButton("cancel").getButton().getStyleClass().add("red");
+        }
+
     }
 
 }

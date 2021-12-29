@@ -2,10 +2,11 @@
 #mldv-top-container {
     -fx-padding: 10px 20px;
 }
-#mldv-bottom-container {
+#mldbv-layout {
     -fx-background-color: -fx-color-background-light;
     -fx-alignment: center;
     -fx-padding: 5px 0;
+    -fx-spacing: 5px;
 }
 
 /* Labels */
@@ -22,9 +23,4 @@
 }
 #mldv-status-label.bad {
     -fx-text-fill: -fx-color-text-bad;
-}
-
-/* Buttons */
-#mldv-button-separator {
-    -fx-padding: 0 5px;
 }
