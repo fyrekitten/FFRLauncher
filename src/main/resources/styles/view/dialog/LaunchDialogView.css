@@ -1,0 +1,18 @@
+/* Layout */
+#ladv-layout {
+    -fx-alignment: center-left;
+    -fx-spacing: 10px;
+    -fx-padding: 20px;
+}
+
+/* Progress Bars */
+#ladv-progress-bar-1,
+#ladv-progress-bar-2,
+#ladv-progress-bar-3 {
+    -fx-pref-width: Infinity;
+}
+
+/* Status Label */
+#ladv-status-label {
+    -fx-padding: 10px 0 0 0;
+}

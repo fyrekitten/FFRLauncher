@@ -10,9 +10,12 @@ import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.mojang.version.VersionType;
+import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.components.PLButton;
 import net.protolauncher.ui.components.PLPlayButton;
+import net.protolauncher.ui.dialog.LaunchDialog;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.dialog.LaunchDialogView;
 
 import java.util.List;
 
@@ -115,14 +118,14 @@ public class PlayTab extends AbstractView<VBox> {
      * Handles the test button being pressed.
      */
     private void testButtonPressed(ActionEvent event, Profile profile) {
-        System.out.println("Test button pressed!");
+        this.launch(profile);
     }
 
     /**
      * Handles the play button being pressed.
      */
     private void playButtonPressed(ActionEvent event, Profile profile) {
-        System.out.println("Play button pressed!");
+        this.launch(profile);
     }
 
     /**
@@ -130,6 +133,18 @@ public class PlayTab extends AbstractView<VBox> {
      */
     private void modButtonPressed(ActionEvent event, Profile profile) {
         // TODO: Modding profile.
+    }
+
+    /**
+     * Opens a launch dialog with the given profile.
+     * @param profile The profile to launch.
+     */
+    private void launch(Profile profile) {
+        LaunchDialog dialog = new LaunchDialog(App.getInstance().getStage());
+        LaunchDialogView view = new LaunchDialogView(dialog, profile);
+        ((ViewScene) dialog.getScene()).addView(view);
+        dialog.show();
+        view.performLaunch();
     }
 
 }

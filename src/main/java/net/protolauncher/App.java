@@ -60,6 +60,11 @@ public class App extends Application {
         return game;
     }
 
+    // Setters
+    public void setGame(@Nullable Process game) {
+        this.game = game;
+    }
+
     /**
      * Handles the startup of the JavaFX application.
      */
