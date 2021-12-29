@@ -181,6 +181,11 @@ public class ProfilesTab extends AbstractView<Pane> {
     private void profileContainerPressed(Profile profile) {
         ViewScene scene = App.getInstance().getSceneAsViewScene();
 
+        // If we're currently on this profile, don't do anything
+        if (profile.getUuid().equals(launcher.getConfig().getCurrentProfileUuid())) {
+            return;
+        }
+
         // Switch profile task
         LoadingView lv = new LoadingView();
         Task<Void> switchProfileTask = new Task<>() {
