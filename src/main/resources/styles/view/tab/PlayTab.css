@@ -1,4 +1,34 @@
-/* Layout */
-#plt-layout {
-    -fx-background-color: red;
+/* Buttons */
+#plt-button-container {
+    -fx-alignment: center;
+    -fx-fill-height: false;
+    -fx-padding: 60px 30px;
+    -fx-spacing: 30px;
+}
+#plt-btn-play .plb-button {
+    -fx-padding: 4px 100px;
+}
+#plt-btn-play .plb-button:disabled {
+    -fx-padding: 14pt 100px;
+}
+#plt-btn-test .plb-button:disabled,
+#plt-btn-mod .plb-button:disabled {
+    -fx-padding: 14px 20px;
+}
+#plt-btn-play .plpb-top-label,
+#plt-btn-play .plb-button {
+    -fx-font: 21pt "Raleway Bold";
+}
+#plt-btn-play .plpb-bottom-label {
+    -fx-font: 15pt "Raleway SemiBold";
+}
+#plt-btn-test .plpb-top-label,
+#plt-btn-mod .plpb-top-label,
+#plt-btn-test .plb-button,
+#plt-btn-mod .plb-button {
+    -fx-font: 16pt "Raleway Bold";
+}
+#plt-btn-test .plpb-bottom-label,
+#plt-btn-mod .plpb-bottom-label {
+    -fx-font: 12pt "Raleway SemiBold";
 }

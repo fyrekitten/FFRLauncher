@@ -200,3 +200,8 @@
 .plb-button.red:disabled {
     -fx-background-color: -fx-color-red-dark;
 }
+
+/* ProtoLauncher Play Button */
+.plpb-text-container {
+    -fx-alignment: center;
+}

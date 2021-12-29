@@ -10,7 +10,7 @@ import javafx.scene.paint.Color;
 public class PLButton extends BorderPane {
 
     // Components
-    private final Button button;
+    protected Button button;
 
     // Constructor
     public PLButton(String text) {
