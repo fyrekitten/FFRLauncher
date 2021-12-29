@@ -21,7 +21,7 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
 
     // References
     private final LoginDialog dialog;
-    private ProtoLauncher launcher;
+    private final ProtoLauncher launcher;
 
     // Components
     private WebView view;
@@ -31,6 +31,7 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
     public MicrosoftLoginDialogView(LoginDialog dialog) {
         super(new Pane(), "Colors.css", "Components.css", "view/dialog/LoginDialogView.css");
         this.dialog = dialog;
+        this.launcher = App.getInstance().getLauncher();
         this.construct();
         this.register();
 
@@ -53,9 +54,6 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
     // AbstractView Implementation
     @Override
     protected void construct() {
-        // Fetch launcher
-        this.launcher = App.getInstance().getLauncher();
-
         // Fetch Microsoft URLs
         Endpoints endpoints = launcher.getConfig().getEndpoints();
         String clientId = endpoints.getMicrosoftApi().getClientId();

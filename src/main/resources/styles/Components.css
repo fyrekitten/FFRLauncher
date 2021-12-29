@@ -22,10 +22,18 @@
 .text-field,
 .password-field {
     -fx-text-fill: -fx-color-text;
-    -fx-background-color: -fx-color-background-superdark;
+    -fx-highlight-fill: -fx-color-background-light;
+    -fx-background-color: -fx-color-background-dark;
     -fx-font: 14pt "Raleway Medium";
     -fx-border-insets: 0;
     -fx-background-radius: 0;
+}
+.text-field:hover {
+    -fx-background-color: -fx-color-background-superdark;
+    -fx-cursor: text;
+}
+.text-field:focused {
+    -fx-background-color: -fx-color-background-superdark;
 }
 
 /* Progress Bars */
@@ -115,6 +123,49 @@
     -fx-padding: 0 16px;
     -fx-alignment: center;
     -fx-font: 18pt "Raleway";
+}
+
+/* Combo Boxes */
+.combo-box {
+    -fx-text-fill: red;
+    -fx-background-color: -fx-color-background-dark;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 2px;
+}
+.combo-box:hover {
+    -fx-background-color: -fx-color-background-superdark;
+    -fx-cursor: hand;
+}
+.combo-box:focused {
+    -fx-background-color: -fx-color-background-superdark;
+}
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text;
+    -fx-font: 14pt "Raleway Medium";
+    -fx-border-insets: 0;
+    -fx-background-radius: 0;
+}
+.combo-box .list-view {
+    -fx-background-color: -fx-color-background;
+}
+.combo-box .list-view .list-cell:hover {
+    -fx-background-color: -fx-color-background-dark;
+    -fx-cursor: hand;
+}
+.combo-box .list-view .list-cell:focused {
+    -fx-background-color: -fx-color-background-dark;
+}
+
+/* Options */
+.option > Label {
+    -fx-font: 16pt "Raleway";
+    -fx-padding: 0 0 4px 2px;
+    -fx-pref-width: Infinity;
+    -fx-border-width: 0 0 3px 0;
+    -fx-border-color: -fx-color-background-superlight;
+    -fx-border-insets: 0 0 10px 0;
 }
 
 /* ProtoLauncher Button */

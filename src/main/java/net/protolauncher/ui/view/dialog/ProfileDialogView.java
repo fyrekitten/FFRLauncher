@@ -11,7 +11,11 @@ public class ProfileDialogView extends AbstractTabView {
 
     // Constructor
     public ProfileDialogView(ProfileDialog dialog) {
-        super("Colors.css", "Components.css", "view/dialog/ProfileDialogView.css");
+        super("Colors.css",
+            "Components.css",
+            "view/dialog/ProfileDialogView.css",
+            "view/tab/dialog/ProfileInfoTab.css"
+        );
         this.dialog = dialog;
         this.getLayout().setId("pdv-layout");
         this.construct();
@@ -25,7 +29,7 @@ public class ProfileDialogView extends AbstractTabView {
         super.construct();
 
         // Tabs
-        this.constructTab("it", "info", "Info", new ProfileInfoTab());
+        this.constructTab("it", "info", "Info", new ProfileInfoTab(dialog));
 
         // Switch to the default tab
         this.switchTab("info", true);

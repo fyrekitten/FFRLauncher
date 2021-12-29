@@ -8,15 +8,25 @@ import com.google.gson.annotations.SerializedName;
 public enum VersionType {
 
     @SerializedName("release")
-    RELEASE,
+    RELEASE("Release"),
 
     @SerializedName("snapshot")
-    SNAPSHOT,
+    SNAPSHOT("Snapshot"),
 
     @SerializedName("old_beta")
-    OLD_BETA,
+    OLD_BETA("Old Beta"),
 
     @SerializedName("old_alpha")
-    OLD_ALPHA
+    OLD_ALPHA("Old Alpha");
+
+    private final String name;
+
+    VersionType(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 
 }

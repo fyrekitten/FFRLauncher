@@ -1,0 +1,10 @@
+/* Layout */
+#pit-layout {
+    -fx-padding: 20px;
+    -fx-spacing: 10px;
+}
+
+/* Version */
+#pit-version-horizontal-container {
+    -fx-spacing: 10px;
+}
