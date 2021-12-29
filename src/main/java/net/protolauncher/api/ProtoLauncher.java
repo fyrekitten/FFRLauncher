@@ -48,6 +48,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -805,6 +806,40 @@ public class ProtoLauncher {
 
         // Save config
         this.saveConfig();
+    }
+
+    /**
+     * Adds the profile to the launcher if it does not already exist,
+     * otherwise updates an existing profile.
+     *
+     * @param profile The profile to update.
+     */
+    public void updateProfile(Profile profile) throws IOException {
+        logger.debug("Updating profile " + profile.getName() + "...");
+
+        // Check for user profiles, or if there are none, add it
+        List<Profile> userProfiles = this.getProfiles(profile.getOwner());
+        if (userProfiles == null) {
+            this.addProfile(profile);
+            return;
+        }
+
+        // If the profile exists, update it, otherwise add it
+        if (userProfiles.stream().filter(p -> p.getUuid().equals(profile.getUuid())).findFirst().orElse(null) == null) {
+            this.addProfile(profile);
+            return;
+        } else {
+            userProfiles = userProfiles.stream()
+                    .map(p -> p.getUuid().equals(profile.getUuid()) ? profile : p)
+                    .collect(Collectors.toList());
+        }
+
+
+        // Update user profiles
+        profiles.put(profile.getOwner(), userProfiles);
+
+        // Save
+        this.saveProfiles();
     }
 
     /**

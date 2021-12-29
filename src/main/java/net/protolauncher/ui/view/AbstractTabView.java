@@ -50,6 +50,9 @@ public abstract class AbstractTabView extends AbstractView<Pane> {
     public int getTabCount() {
         return tabs.size();
     }
+    public AbstractView<?> getTab(String id) {
+        return tabs.get(id);
+    }
 
     // Setters
     /**

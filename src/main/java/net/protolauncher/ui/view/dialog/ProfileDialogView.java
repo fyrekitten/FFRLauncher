@@ -1,12 +1,22 @@
 package net.protolauncher.ui.view.dialog;
 
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.layout.BorderPane;
+import net.protolauncher.App;
+import net.protolauncher.api.Profile;
+import net.protolauncher.api.Profile.Version;
+import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.AbstractButtonView;
 import net.protolauncher.ui.view.AbstractTabView;
 import net.protolauncher.ui.view.AbstractView;
 import net.protolauncher.ui.view.tab.dialog.ProfileInfoTab;
+
+import java.io.IOException;
+import java.util.Objects;
+
+import static net.protolauncher.App.LOGGER;
 
 public class ProfileDialogView extends AbstractView<BorderPane> {
 
@@ -49,14 +59,126 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
      * Handles the save button being pressed.
      */
     private void saveButtonPressed(ActionEvent event) {
-        System.out.println("Save button pressed!");
+        // Disable buttons
+        abvButtons.getButton("save").setDisable(true);
+        abvButtons.getButton("cancel").setDisable(true);
+
+        // Save profile and close
+        ProtoLauncher launcher = App.getInstance().getLauncher();
+        Profile profile = (Profile) dialog.getUserData();
+
+        // If there's no profile, create one.
+        if (profile == null) {
+            // Get minimum data, since we'll perform an update shortly
+            ProfileInfoTab pit = (ProfileInfoTab) atvTabs.getTab("info");
+            if (launcher.getConfig().getCurrentUserUuid() == null) {
+                // We can't make a profile if there's not a current user, silly
+                dialog.setUserData(Boolean.FALSE);
+                dialog.hide();
+                return;
+            }
+            try {
+                profile = new Profile(pit.getName(), pit.getVersion(), Objects.requireNonNull(launcher.getCurrentUser()));
+            } catch (IOException e) {
+                // Man, stuff must be really going wrong. Just abort.
+                e.printStackTrace();
+                dialog.setUserData(Boolean.FALSE);
+                dialog.hide();
+                return;
+            }
+        }
+
+        // The task for saving a profile.
+        Profile finalProfile = profile;
+        Task<Void> saveProfileTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Update data from all tabs
+                ProfileInfoTab pit = (ProfileInfoTab) atvTabs.getTab("info");
+                if (!finalProfile.getName().equals(pit.getName())) {
+                    finalProfile.setName(pit.getName());
+                }
+                if (!finalProfile.getVersion().getMinecraft().equals(pit.getVersion().getId())) {
+                    Version ver = finalProfile.getVersion();
+                    ver.setVersion(pit.getVersion());
+                    finalProfile.setVersion(ver);
+                }
+
+                // Update profile
+                launcher.updateProfile(finalProfile);
+                return null;
+            }
+        };
+
+        // Handle success
+        saveProfileTask.setOnSucceeded(event1 -> {
+            dialog.setUserData(Boolean.TRUE);
+            dialog.hide();
+        });
+
+        // Handle failure
+        saveProfileTask.setOnFailed(event1 -> {
+            LOGGER.debug("Profile update failed: " + saveProfileTask.getException().getMessage());
+            dialog.setUserData(Boolean.FALSE);
+            dialog.hide();
+        });
+
+        // Run the save thread
+        new Thread(saveProfileTask).start();
     }
 
     /**
      * Handles the cancel button being pressed.
      */
     private void cancelButtonPressed(ActionEvent event) {
-        System.out.println("Cancel button pressed!");
+        dialog.setUserData(Boolean.FALSE);
+        dialog.hide();
+    }
+
+    /**
+     * Handles the delete button being pressed.
+     */
+    private void deleteButtonPressed(ActionEvent event) {
+        // TODO: Confirmation box.
+        // Disable buttons
+        abvButtons.getButton("save").setDisable(true);
+        abvButtons.getButton("cancel").setDisable(true);
+
+        // Delete profile and close.
+        ProtoLauncher launcher = App.getInstance().getLauncher();
+        Profile profile = (Profile) dialog.getUserData();
+
+        // If there's no profile, just close
+        if (profile == null) {
+            dialog.setUserData(Boolean.FALSE);
+            dialog.hide();
+            return;
+        }
+
+        // The task for deleting a profile.
+        Task<Void> deleteProfileTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                launcher.removeProfile(profile);
+                return null;
+            }
+        };
+
+        // Handle success
+        deleteProfileTask.setOnSucceeded(event1 -> {
+            dialog.setUserData(Boolean.TRUE);
+            dialog.hide();
+        });
+
+        // Handle failure
+        deleteProfileTask.setOnFailed(event1 -> {
+            LOGGER.debug("Profile delete failed: " + deleteProfileTask.getException().getMessage());
+            dialog.setUserData(Boolean.FALSE);
+            dialog.hide();
+        });
+
+        // Run the delete thread
+        new Thread(deleteProfileTask).start();
     }
 
     /**
@@ -114,11 +236,12 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
             super.construct();
 
             // Buttons
+            if (dialog.getUserData() != null) {
+                this.constructButton("pdv-button-delete", "delete", "Delete", ProfileDialogView.this::deleteButtonPressed);
+                this.getButton("delete").getButton().getStyleClass().add("red");
+            }
             this.constructButton("pdv-button-cancel", "cancel", "Cancel", ProfileDialogView.this::cancelButtonPressed);
             this.constructButton("pdv-button-save", "save", "Save", ProfileDialogView.this::saveButtonPressed);
-
-
-            // Add "red" to cancel button
             this.getButton("cancel").getButton().getStyleClass().add("red");
         }
 

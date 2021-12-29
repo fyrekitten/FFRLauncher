@@ -41,6 +41,14 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         this.register();
     }
 
+    // Getters
+    public String getName() {
+        return txtName.getText();
+    }
+    public VersionInfo getVersion() {
+        return cbVersion.getValue();
+    }
+
     // AbstractView Implementation
     @Override
     protected void construct() {

@@ -211,13 +211,15 @@ public class ProfilesTab extends AbstractView<Pane> {
         ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
         dialog.setUserData(profile);
         dialog.setOnHidden(hiddenEvent -> {
-            // Refresh the scene
-            LoadingView lv = new LoadingView();
-            lv.show(scene, () -> {
-                scene.refresh();
-                System.gc();
-                lv.hide(scene);
-            });
+            // Refresh the scene if requested
+            if (dialog.getUserData() == Boolean.TRUE) {
+                LoadingView lv = new LoadingView();
+                lv.show(scene, () -> {
+                    scene.refresh();
+                    System.gc();
+                    lv.hide(scene);
+                });
+            }
         });
         ProfileDialogView view = new ProfileDialogView(dialog);
         ((ViewScene) dialog.getScene()).addView(view);

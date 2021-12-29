@@ -174,9 +174,8 @@ public class MainView extends AbstractTabView {
         } else if (this.getCurrentTabId().equals("profiles")) {
             ProfileDialog dialog = new ProfileDialog(App.getInstance().getStage());
             dialog.setOnHidden(hiddenEvent -> {
-                // Get the profile and if the profile is not null, refresh the scene
-                Profile profile = (Profile) dialog.getUserData();
-                if (profile != null) {
+                // Refresh the scene if requested
+                if (dialog.getUserData() == Boolean.TRUE) {
                     LoadingView lv = new LoadingView();
                     lv.show(scene, () -> {
                         scene.refresh();
