@@ -22,6 +22,7 @@ import net.protolauncher.ui.view.dialog.ProfileDialogView;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -63,8 +64,8 @@ public class ProfilesTab extends AbstractView<Pane> {
         vboxVerticalContainer.setId("pt-vertical-container");
 
         // Construct Profiles
-        // TODO: Order by last played.
-        for (Profile profile : Objects.requireNonNull(launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()))) {
+        List<Profile> userProfiles = Objects.requireNonNull(launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()));
+        for (Profile profile : userProfiles.stream().sorted(Comparator.comparing(Profile::getLastLaunched).reversed()).toList()) {
             profiles.add(this.constructProfile(profile));
         }
     }
