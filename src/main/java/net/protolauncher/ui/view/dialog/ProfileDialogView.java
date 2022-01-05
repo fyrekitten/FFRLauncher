@@ -127,7 +127,9 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
         });
 
         // Run the save thread
-        new Thread(saveProfileTask).start();
+        Thread saveProfileThread = new Thread(saveProfileTask);
+        saveProfileThread.setName("Save Profile Task");
+        saveProfileThread.start();
     }
 
     /**
@@ -190,7 +192,9 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                 });
 
                 // Run the delete thread
-                new Thread(deleteProfileTask).start();
+                Thread deleteProfileThread = new Thread(deleteProfileTask);
+                deleteProfileThread.setName("Delete Profile Task");
+                deleteProfileThread.start();
             } else {
                 abvButtons.getButton("save").setDisable(false);
                 abvButtons.getButton("cancel").setDisable(false);

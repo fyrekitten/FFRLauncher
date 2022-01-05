@@ -206,7 +206,11 @@ public class ProfilesTab extends AbstractView<Pane> {
             switchProfileTask.getException().printStackTrace();
             lv.hide(scene);
         });
-        lv.show(scene, () -> new Thread(switchProfileTask).start());
+        lv.show(scene, () -> {
+            Thread switchProfileThread = new Thread(switchProfileTask);
+            switchProfileThread.setName("Switch Profile Task");
+            switchProfileThread.start();
+        });
     }
 
     /**

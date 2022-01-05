@@ -141,7 +141,9 @@ public class MojangLoginDialogView extends AbstractView<VBox> {
         });
 
         // Run the login thread
-        new Thread(loginTask).start();
+        Thread loginThread = new Thread(loginTask);
+        loginThread.setName("Login Task");
+        loginThread.start();
     }
 
     /**

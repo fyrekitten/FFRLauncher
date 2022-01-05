@@ -159,7 +159,9 @@ public class App extends Application {
             initializeTask.setOnFailed(event -> this.severeInternalError(initializeTask.getException()));
 
             // Run the initialization thread
-            new Thread(initializeTask).start();
+            Thread initializeThread = new Thread(initializeTask);
+            initializeThread.setName("Initialize Task");
+            initializeThread.start();
         } catch (Exception e) {
             this.severeInternalError(e);
         }

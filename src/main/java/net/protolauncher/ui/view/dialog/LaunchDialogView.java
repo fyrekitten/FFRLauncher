@@ -109,7 +109,7 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
      * Task 1: Fetch the version.
      */
     private void internal_launchTask_downloadVersion() {
-        LOGGER.info("----- FETCH VERSION -----");
+        LOGGER.info("Launch Task: Fetch Version");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
 
         // Mark the profile as the last launched profile
@@ -157,20 +157,23 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadVersionTask.setProgressHandler(progress -> pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax()));
 
         // Run the download version thread
-        new Thread(downloadVersionTask).start();
+        Thread downloadVersionThread = new Thread(downloadVersionTask);
+        downloadVersionThread.setName("Download Version Task");
+        downloadVersionThread.start();
     }
 
     /**
      * Task 2: Download Java.
      */
     private void internal_launchTask_downloadJava() {
-        LOGGER.info("----- DOWNLOAD JAVA -----");
+        LOGGER.info("Launch Task: Download Java (if necessary)");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
         pgbProgressBar3.setProgress(0);
 
         // Check if we even need to
         if (!version.getAssets().equals("pre-1.6")) {
+            LOGGER.info("Downloading Java is not necessary as this version is compatible with post-1.8 Java versions.");
             this.internal_launchTask_downloadLibraries();
             return;
         }
@@ -201,14 +204,16 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadJavaTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
 
         // Run the download java thread
-        new Thread(downloadJavaTask).start();
+        Thread downloadJavaThread = new Thread(downloadJavaTask);
+        downloadJavaThread.setName("Download Java Task");
+        downloadJavaThread.start();
     }
 
     /**
      * Task 3: Download libraries.
      */
     private void internal_launchTask_downloadLibraries() {
-        LOGGER.info("----- DOWNLOAD LIBRARIES -----");
+        LOGGER.info("Launch Task: Download Libraries");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
         pgbProgressBar3.setProgress(0);
@@ -241,14 +246,16 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadLibrariesTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
 
         // Run the download libraries thread
-        new Thread(downloadLibrariesTask).start();
+        Thread downloadLibrariesThread = new Thread(downloadLibrariesTask);
+        downloadLibrariesThread.setName("Download Libraries Task");
+        downloadLibrariesThread.start();
     }
 
     /**
      * Task 4: Download assets.
      */
     private void internal_launchTask_downloadAssets() {
-        LOGGER.info("----- DOWNLOAD ASSETS -----");
+        LOGGER.info("Launch Task: Download Assets");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
         pgbProgressBar3.setProgress(0);
@@ -281,14 +288,16 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadAssetsTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
 
         // Run the download libraries thread
-        new Thread(downloadAssetsTask).start();
+        Thread downloadAssetsThread = new Thread(downloadAssetsTask);
+        downloadAssetsThread.setName("Download Assets Task");
+        downloadAssetsThread.start();
     }
 
     /**
      * Task 5: Launch!
      */
     private void internal_launchTask_launch() {
-        LOGGER.info("----- LAUNCH -----");
+        LOGGER.info("Launch Task: Launch");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
         pgbProgressBar3.setProgress(0);
@@ -324,7 +333,9 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         launchTask.setOnFailed(event -> this.internal_launchFailed(launchTask.getException()));
 
         // Run the launch thread
-        new Thread(launchTask).start();
+        Thread launchThread = new Thread(launchTask);
+        launchThread.setName("Launch Task");
+        launchThread.start();
     }
 
     /**

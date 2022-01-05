@@ -188,7 +188,11 @@ public class UsersTab extends AbstractView<Pane> {
             switchUserTask.getException().printStackTrace();
             lv.hide(scene);
         });
-        lv.show(scene, () -> new Thread(switchUserTask).start());
+        lv.show(scene, () -> {
+            Thread switchUserThread = new Thread(switchUserTask);
+            switchUserThread.setName("Switch User Task");
+            switchUserThread.start();
+        });
     }
 
     /**
@@ -216,7 +220,11 @@ public class UsersTab extends AbstractView<Pane> {
             removeUserTask.getException().printStackTrace();
             lv.hide(scene);
         });
-        lv.show(scene, () -> new Thread(removeUserTask).start());
+        lv.show(scene, () -> {
+            Thread removeUserThread = new Thread(removeUserTask);
+            removeUserThread.setName("Remove User Task");
+            removeUserThread.start();
+        });
     }
 
 }

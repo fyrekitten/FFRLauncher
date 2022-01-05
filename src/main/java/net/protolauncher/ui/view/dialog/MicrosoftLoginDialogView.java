@@ -137,7 +137,9 @@ public class MicrosoftLoginDialogView extends AbstractView<Pane> {
         });
 
         // Run the login thread
-        new Thread(loginTask).start();
+        Thread loginThread = new Thread(loginTask);
+        loginThread.setName("Login Task");
+        loginThread.start();
     }
 
 }
