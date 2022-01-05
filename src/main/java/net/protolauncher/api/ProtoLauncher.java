@@ -864,6 +864,12 @@ public class ProtoLauncher {
         logger.debug("Profile removed.");
         this.saveProfiles();
 
+        // Remove the folder if it's empty
+        Path path = Path.of(profile.getPath());
+        if (Files.isDirectory(path) && Files.list(path).findAny().isEmpty()) {
+            Files.delete(path);
+        }
+
         // Switch to the next possible profile
         if (userProfiles.size() > 0) {
             this.switchProfile(userProfiles.get(0));
