@@ -289,11 +289,6 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
      * Task 5: Launch!
      */
     private void internal_launchTask_launch() {
-        if (true) {
-            this.internal_launchFailed(new Exception("AHHH"));
-            return;
-        }
-
         LOGGER.info("----- LAUNCH -----");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
