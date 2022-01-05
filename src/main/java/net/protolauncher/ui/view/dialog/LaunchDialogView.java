@@ -9,8 +9,8 @@ import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
+import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.log4j.ILogListener;
-import net.protolauncher.log4j.LogPassthroughAppender;
 import net.protolauncher.mojang.asset.AssetIndex;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.version.Version;
@@ -18,7 +18,6 @@ import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.ui.dialog.LaunchDialog;
 import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.AbstractView;
-import org.apache.logging.log4j.core.LogEvent;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,8 +60,8 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         this.getLayout().setId("ladv-layout");
         this.construct();
         this.register();
-        this.dialog.setOnHiding(event -> LogPassthroughAppender.removeListener(this));
-        LogPassthroughAppender.registerListener(this);
+        this.dialog.setOnHiding(event -> FeedbackLoggerWrapper.removeListener(this));
+        FeedbackLoggerWrapper.registerListener(this);
     }
 
     // AbstractView Implementation
@@ -338,8 +337,7 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
     }
 
     @Override
-    public void onLog(LogEvent event) {
-        String message = event.getMessage().getFormattedMessage();
+    public void onLog(String message) {
         Platform.runLater(() -> lblStatus.setText(message));
     }
 

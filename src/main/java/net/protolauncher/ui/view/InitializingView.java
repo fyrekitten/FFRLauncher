@@ -10,9 +10,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import net.protolauncher.App;
+import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.log4j.ILogListener;
-import net.protolauncher.log4j.LogPassthroughAppender;
-import org.apache.logging.log4j.core.LogEvent;
 
 public class InitializingView extends AbstractView<StackPane> implements ILogListener {
 
@@ -28,7 +27,7 @@ public class InitializingView extends AbstractView<StackPane> implements ILogLis
         this.getLayout().setId("iv-layout");
         this.construct();
         this.register();
-        LogPassthroughAppender.registerListener(this);
+        FeedbackLoggerWrapper.registerListener(this);
     }
 
     // AbstractView Implementation
@@ -68,8 +67,7 @@ public class InitializingView extends AbstractView<StackPane> implements ILogLis
 
     // ILogListener Implementation
     @Override
-    public void onLog(LogEvent event) {
-        String message = event.getMessage().getFormattedMessage();
+    public void onLog(String message) {
         Platform.runLater(() -> this.addLog(message));
     }
 

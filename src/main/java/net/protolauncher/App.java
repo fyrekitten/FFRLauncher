@@ -8,13 +8,11 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
-import net.protolauncher.log4j.LogPassthroughAppender;
+import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.InitializingView;
 import net.protolauncher.ui.view.MainView;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -26,7 +24,7 @@ import java.util.Properties;
 public class App extends Application {
 
     // Constants
-    public static final Logger LOGGER = LogManager.getLogger("JavaFX");
+    public static final FeedbackLoggerWrapper LOGGER = new FeedbackLoggerWrapper("JavaFX");
     public static final String VERSION = getLauncherVersion();
     private static final int MIN_WIDTH = 800;
     private static final int MIN_HEIGHT = 500;
@@ -147,7 +145,7 @@ public class App extends Application {
             // Handle success
             initializeTask.setOnSucceeded(event -> {
                 // Remove listener
-                LogPassthroughAppender.removeListener(initializingView);
+                FeedbackLoggerWrapper.removeListener(initializingView);
 
                 // Set the scene to the main view
                 scene.addView(new MainView());
@@ -156,7 +154,7 @@ public class App extends Application {
 
             // Handle failure
             initializeTask.setOnFailed(event -> {
-                LOGGER.error(initializeTask.getException());
+                LOGGER.error(initializeTask.getException().getMessage());
                 initializeTask.getException().printStackTrace();
                 System.exit(-1);
                 // TODO: Show error popup window
@@ -166,7 +164,7 @@ public class App extends Application {
             new Thread(initializeTask).start();
         } catch (Exception e) {
             // TODO: Show error popup window
-            LOGGER.error(e);
+            LOGGER.error(e.getMessage());
             e.printStackTrace();
             Platform.exit();
         }

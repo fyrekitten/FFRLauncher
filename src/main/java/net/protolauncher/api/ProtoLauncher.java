@@ -11,6 +11,7 @@ import net.protolauncher.api.function.StepInfoConsumer;
 import net.protolauncher.api.function.StepProgressConsumer;
 import net.protolauncher.api.gson.DurationTypeAdapter;
 import net.protolauncher.api.gson.InstantTypeAdapter;
+import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
@@ -34,8 +35,6 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
@@ -57,7 +56,7 @@ import java.util.zip.GZIPInputStream;
 public class ProtoLauncher {
 
     // Logging
-    private final Logger logger;
+    private final FeedbackLoggerWrapper logger;
 
     // Launcher Variables
     private Gson gson;
@@ -77,7 +76,7 @@ public class ProtoLauncher {
      */
     public ProtoLauncher() {
         // Prepare logger
-        logger = LogManager.getLogger("ProtoLauncher");
+        logger = new FeedbackLoggerWrapper("ProtoLauncher");
         logger.debug("Logger created. Preparing ProtoLauncher API...");
 
         // Create a new GSON builder
@@ -122,7 +121,7 @@ public class ProtoLauncher {
     }
 
     // Getters
-    public Logger getLogger() {
+    public FeedbackLoggerWrapper getLoggerWrapper() {
         return logger;
     }
     public Config getConfig() {
