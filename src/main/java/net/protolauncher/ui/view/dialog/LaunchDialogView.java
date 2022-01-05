@@ -15,13 +15,16 @@ import net.protolauncher.mojang.asset.AssetIndex;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.version.Version;
 import net.protolauncher.mojang.version.VersionInfo;
+import net.protolauncher.ui.dialog.Alert;
 import net.protolauncher.ui.dialog.LaunchDialog;
 import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.dialog.AlertView.AlertButton;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -286,6 +289,11 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
      * Task 5: Launch!
      */
     private void internal_launchTask_launch() {
+        if (true) {
+            this.internal_launchFailed(new Exception("AHHH"));
+            return;
+        }
+
         LOGGER.info("----- LAUNCH -----");
         pgbProgressBar1.setProgress(++currentStep / totalSteps);
         pgbProgressBar2.setProgress(0);
@@ -330,10 +338,24 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
      * @param e The error.
      */
     private void internal_launchFailed(Throwable e) {
-        // TODO: Show error popup window.
         LOGGER.error("Launch failed! " + e.getMessage());
         e.printStackTrace();
-        dialog.close();
+        Alert alert = new Alert(
+            dialog,
+        "ProtoLauncher: Launch Failed",
+        "There was an error while attempting to launch this profile. You can either try again, or contact the developers if the issue is recurring.",
+            e,
+            EnumSet.of(AlertButton.OKAY_BAD, AlertButton.RETRY)
+        );
+        alert.setOnHidden(event -> {
+            if (alert.getUserData() != null && alert.getUserData() instanceof AlertButton && alert.getUserData() == AlertButton.RETRY) {
+                this.launching = false;
+                this.performLaunch();
+            } else {
+                Platform.runLater(dialog::close);
+            }
+        });
+        alert.show();
     }
 
     @Override

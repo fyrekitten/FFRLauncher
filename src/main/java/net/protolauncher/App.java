@@ -10,14 +10,17 @@ import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.ui.ViewScene;
+import net.protolauncher.ui.dialog.Alert;
 import net.protolauncher.ui.task.LauncherTask;
 import net.protolauncher.ui.view.InitializingView;
 import net.protolauncher.ui.view.MainView;
+import net.protolauncher.ui.view.dialog.AlertView.AlertButton;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -153,20 +156,12 @@ public class App extends Application {
             });
 
             // Handle failure
-            initializeTask.setOnFailed(event -> {
-                LOGGER.error(initializeTask.getException().getMessage());
-                initializeTask.getException().printStackTrace();
-                System.exit(-1);
-                // TODO: Show error popup window
-            });
+            initializeTask.setOnFailed(event -> this.severeInternalError(initializeTask.getException()));
 
             // Run the initialization thread
             new Thread(initializeTask).start();
         } catch (Exception e) {
-            // TODO: Show error popup window
-            LOGGER.error(e.getMessage());
-            e.printStackTrace();
-            Platform.exit();
+            this.severeInternalError(e);
         }
     }
 
@@ -201,6 +196,28 @@ public class App extends Application {
      */
     public InputStream getRequiredResourceAsStream(String location) {
         return Objects.requireNonNull(this.getClass().getResourceAsStream("/" + location));
+    }
+
+    /**
+     * Creates a new alert window for a severe internal error.
+     * @param e The error.
+     */
+    public void severeInternalError(Throwable e) {
+        LOGGER.error(e.getMessage());
+        e.printStackTrace();
+        Stage alertStage = null;
+        if (stage.isShowing()) {
+            alertStage = stage;
+        }
+        Alert alert = new Alert(
+            alertStage,
+            "ProtoLauncher: Severe Internal Error",
+            "There was a severe internal error and the program must now close. Please contact the developers if the issue is recurring.",
+            e,
+            EnumSet.of(AlertButton.OKAY_BAD)
+        );
+        alert.setOnHidden(event -> Platform.exit());
+        alert.show();
     }
 
     /**
