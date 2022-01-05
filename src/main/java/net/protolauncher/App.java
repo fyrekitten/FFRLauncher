@@ -127,12 +127,13 @@ public class App extends Application {
                     updateProgress(++currentStep, totalSteps);
                     launcher.loadProfiles();
 
-                    // Validate current user
+                    // Validate current user and check latest profiles
                     updateProgress(++currentStep, totalSteps);
                     User user = launcher.getCurrentUser();
                     if (user != null) {
-                        boolean isValid = launcher.validateUser(user.getUuid());
                         // If we have an invalid user on launch, what do we do?
+                        boolean isValid = launcher.validateUser(user.getUuid());
+                        launcher.checkLatestProfiles(user.getUuid());
                     }
 
                     // Done

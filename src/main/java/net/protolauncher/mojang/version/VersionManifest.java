@@ -21,13 +21,21 @@ public class VersionManifest {
         return this.getVersion(latest.release);
     }
     public VersionInfo getLatestSnapshot() {
-        return this.getVersion(latest.snapshot);
+        if (latest.snapshot.equals(latest.release)) {
+            return this.getVersionsOfType(VersionType.SNAPSHOT).get(0);
+        } else {
+            return this.getVersion(latest.snapshot);
+        }
     }
     public String getLatestReleaseId() {
         return latest.release;
     }
     public String getLatestSnapshotId() {
-        return latest.snapshot;
+        if (latest.snapshot.equals(latest.release)) {
+            return this.getVersionsOfType(VersionType.SNAPSHOT).get(0).id;
+        } else {
+            return latest.snapshot;
+        }
     }
     public List<VersionInfo> getVersions() {
         return versions;

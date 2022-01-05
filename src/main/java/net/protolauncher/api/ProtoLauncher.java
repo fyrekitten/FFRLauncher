@@ -943,12 +943,8 @@ public class ProtoLauncher {
             }
         }
 
-        // Force the version info the mark this as type snapshot (to prevent a latest release to mark this profile as existing)
-        VersionInfo modifiedVersionInfo = versionManifest.getLatestSnapshot().copy();
-        modifiedVersionInfo.setType(VersionType.SNAPSHOT);
-
         // Create profile
-        Profile profile = new Profile("Latest Snapshot", modifiedVersionInfo, owner);
+        Profile profile = new Profile("Latest Snapshot", versionManifest.getLatestSnapshot(), owner);
         profile.setVersion(profile.getVersion().setLatest(true));
 
         // Add profile
@@ -1002,9 +998,7 @@ public class ProtoLauncher {
                 if (!ver.getMinecraft().equals(latestSnapshotInfo.getId())) {
                     logger.debug("Profile " + profile.getName() + " has been updated to " + latestSnapshotInfo.getId());
                     updated = true;
-                    VersionInfo latestSnapshotInfoCopy = versionManifest.getLatestSnapshot().copy();
-                    latestSnapshotInfoCopy.setType(VersionType.SNAPSHOT);
-                    profile.setVersion(ver.setVersion(latestSnapshotInfoCopy));
+                    profile.setVersion(ver.setVersion(latestSnapshotInfo));
                     userProfiles.set(i, profile);
                 }
             }
