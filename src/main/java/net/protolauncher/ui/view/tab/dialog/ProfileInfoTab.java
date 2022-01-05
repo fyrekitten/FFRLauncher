@@ -1,5 +1,6 @@
 package net.protolauncher.ui.view.tab.dialog;
 
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -27,6 +28,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
     private TextField txtName;
     private VBox vboxVersionContainer;
     private Label lblVersion;
+    private CheckBox chkLatest;
     private HBox hboxVersionHorizontalContainer;
     private ComboBox<VersionInfo> cbVersion;
     private ComboBox<VersionType> cbVersionType;
@@ -47,6 +49,9 @@ public class ProfileInfoTab extends AbstractView<VBox> {
     }
     public VersionInfo getVersion() {
         return cbVersion.getValue();
+    }
+    public CheckBox getLatest() {
+        return chkLatest;
     }
 
     // AbstractView Implementation
@@ -141,6 +146,18 @@ public class ProfileInfoTab extends AbstractView<VBox> {
             }
         });
 
+        // Latest Checkbox
+        chkLatest = new CheckBox("Keep Profile up to Date");
+        chkLatest.setId("pit-latest");
+        chkLatest.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                cbVersion.setValue(launcher.getVersionManifest().getVersionsOfType(cbVersionType.getValue()).get(0));
+                cbVersion.setDisable(true);
+            } else {
+                cbVersion.setDisable(false);
+            }
+        });
+
         // Check for an existing profile and apply autofills
         Profile existingProfile = (Profile) this.dialog.getUserData();
         if (existingProfile != null) {
@@ -149,6 +166,10 @@ public class ProfileInfoTab extends AbstractView<VBox> {
             cbVersionType.setValue(type);
             cbVersion.getItems().addAll(launcher.getVersionManifest().getVersionsOfType(type));
             cbVersion.setValue(launcher.getVersionManifest().getVersion(existingProfile.getVersion().getMinecraft()));
+            if (existingProfile.getVersion().isLatest()) {
+                chkLatest.setSelected(true);
+                cbVersion.setDisable(true);
+            }
         } else {
             txtName.setText("New Profile");
             cbVersionType.setValue(VersionType.RELEASE);
@@ -162,7 +183,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         VBox layout = this.getLayout();
         vboxNameContainer.getChildren().addAll(lblName, txtName);
         hboxVersionHorizontalContainer.getChildren().addAll(cbVersion, cbVersionType);
-        vboxVersionContainer.getChildren().addAll(lblVersion, hboxVersionHorizontalContainer);
+        vboxVersionContainer.getChildren().addAll(lblVersion, hboxVersionHorizontalContainer, chkLatest);
         layout.getChildren().addAll(vboxNameContainer, vboxVersionContainer);
     }
 

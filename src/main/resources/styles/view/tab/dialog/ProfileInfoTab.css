@@ -8,3 +8,6 @@
 #pit-version-horizontal-container {
     -fx-spacing: 10px;
 }
+#pit-latest {
+    -fx-padding: 10px 0 0 2px;
+}

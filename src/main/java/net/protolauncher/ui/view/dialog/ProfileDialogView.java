@@ -106,6 +106,11 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                     ver.setVersion(pit.getVersion());
                     finalProfile.setVersion(ver);
                 }
+                if (finalProfile.getVersion().isLatest() != pit.getLatest().isSelected()) {
+                    Version ver = finalProfile.getVersion();
+                    ver.setLatest(pit.getLatest().isSelected());
+                    finalProfile.setVersion(ver);
+                }
 
                 // Update profile
                 launcher.updateProfile(finalProfile);
