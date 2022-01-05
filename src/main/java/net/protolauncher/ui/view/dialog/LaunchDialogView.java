@@ -170,7 +170,6 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         pgbProgressBar3.setProgress(0);
 
         // Check if we even need to
-        System.out.println("ASSETS: " + version.getAssets());
         if (!version.getAssets().equals("pre-1.6")) {
             this.internal_launchTask_downloadLibraries();
             return;

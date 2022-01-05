@@ -184,7 +184,6 @@ public class MainView extends AbstractTabView {
                     });
                 }
             });
-            // TODO: On hidden refresh
             ProfileDialogView view = new ProfileDialogView(dialog);
             ((ViewScene) dialog.getScene()).addView(view);
             dialog.show();

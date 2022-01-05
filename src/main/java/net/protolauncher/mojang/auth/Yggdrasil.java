@@ -169,7 +169,7 @@ public class Yggdrasil {
      * @return A string representing the serialized json properties.
      */
     public String deserializeProperties(JsonElement properties) {
-        HashMap<String, String> finalProperties = new HashMap<>();
+        HashMap<String, JsonArray> finalProperties = new HashMap<>();
         if (properties.isJsonArray()) {
             JsonArray arr = (JsonArray) properties;
             for (JsonElement element : arr) {
@@ -179,13 +179,17 @@ public class Yggdrasil {
 
                 JsonObject obj = element.getAsJsonObject();
                 if (obj.get("name") != null && obj.get("value") != null) {
-                    finalProperties.put(obj.get("name").getAsString(), obj.get("value").getAsString());
+                    String key = obj.get("name").getAsString();
+                    JsonArray value = new JsonArray();
+                    value.add(obj.get("value"));
+                    finalProperties.put(key, value);
                 }
             }
         } else if (properties.isJsonObject()) {
             finalProperties = gson.fromJson(properties, new TypeToken<HashMap<String, String>>() {}.getType());
         }
-        return gson.toJson(finalProperties);
+        // We create a new GSON here as we need the default GSON properties to parse this correctly.
+        return (new Gson()).toJson(finalProperties);
     }
 
     /**
