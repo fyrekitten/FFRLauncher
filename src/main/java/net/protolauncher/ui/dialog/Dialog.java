@@ -17,9 +17,14 @@ public abstract class Dialog extends Stage {
     /**
      * Constructs a new dialog with the window as the owner and the requested view as the view.
      *
-     * @param owner The owner of this dialog.
+     * @param owner The owner of this dialog, if any.
+     * @param title The title of this dialog.
+     * @param minWidth The minimum width of this dialog.
+     * @param minHeight The minimum height of this dialog.
+     * @param width The initial width of this dialog.
+     * @param height This initial height of this dialog.
      */
-    public Dialog(Window owner, String title, double minWidth, double minHeight, double width, double height) {
+    public Dialog(@Nullable Window owner, String title, double minWidth, double minHeight, double width, double height) {
         this.initOwner(owner);
         this.initModality(Modality.WINDOW_MODAL);
         this.setTitle(title);

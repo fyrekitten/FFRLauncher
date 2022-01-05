@@ -1,0 +1,22 @@
+#alert-layout Label {
+    -fx-padding: 10px;
+    -fx-wrap-text: true;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-font: 14pt "Raleway Medium";
+    -fx-pref-width: 9999999;
+    -fx-pref-height: 9999999;
+}
+#alert-layout TextArea {
+    -fx-padding: 10px;
+    -fx-min-height: 150px;
+}
+#alert-layout TextArea .content {
+    -fx-background-color: -fx-color-background-dark;
+}
+#abv-layout {
+    -fx-background-color: -fx-color-background-light;
+    -fx-alignment: center;
+    -fx-padding: 5px 10px;
+    -fx-spacing: 5px;
+}
