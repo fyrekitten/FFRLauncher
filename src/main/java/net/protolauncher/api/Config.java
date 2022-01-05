@@ -60,6 +60,11 @@ public class Config {
      */
     @Since(1.0)
     private boolean validate;
+    /**
+     * Whether this is the first launch of the launcher or not.
+     */
+    @Since(1.0)
+    private boolean firstLaunch;
 
     /**
      * Constructs a new settings with default values.
@@ -95,6 +100,9 @@ public class Config {
     public boolean shouldValidate() {
         return validate;
     }
+    public boolean isFirstLaunch() {
+        return firstLaunch;
+    }
 
     // Setters
     public Config setClientToken(String clientToken) {
@@ -125,6 +133,10 @@ public class Config {
         this.validate = validate;
         return this;
     }
+    public Config setFirstLaunch(boolean firstLaunch) {
+        this.firstLaunch = firstLaunch;
+        return this;
+    }
 
     /**
      * Resets the settings to their default values.
@@ -140,6 +152,7 @@ public class Config {
         this.endpoints = new Endpoints();
         this.prettyPrint = false;
         this.validate = true;
+        this.firstLaunch = true;
         return this;
     }
 

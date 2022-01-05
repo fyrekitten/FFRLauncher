@@ -153,6 +153,16 @@ public class App extends Application {
                 // Set the scene to the main view
                 scene.addView(new MainView());
                 scene.removeView(initializingView);
+
+                // If this is the first launch, now that we are showing the view, we can set it to false
+                if (launcher.getConfig().isFirstLaunch()) {
+                    launcher.getConfig().setFirstLaunch(false);
+                    try {
+                        launcher.saveConfig();
+                    } catch (IOException e) {
+                        this.severeInternalError(e);
+                    }
+                }
             });
 
             // Handle failure
