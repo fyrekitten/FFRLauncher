@@ -96,7 +96,13 @@ public class MainView extends AbstractTabView {
         btnAddButton.setOnAction(this::addButtonPressed);
 
         // Switch to the default tab
-        this.switchTab("play", true);
+        if (launcher.getUserCount() == 0) {
+            this.switchTab("users", true);
+        } else if (launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()) == null) {
+            this.switchTab("profiles", true);
+        } else {
+            this.switchTab("play", true);
+        }
 
         // Set tab right index
         this.setRightIndex(this.getTabCount() - 1);
