@@ -7,13 +7,16 @@ import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.Profile.Version;
 import net.protolauncher.api.ProtoLauncher;
+import net.protolauncher.ui.dialog.Alert;
 import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.AbstractButtonView;
 import net.protolauncher.ui.view.AbstractTabView;
 import net.protolauncher.ui.view.AbstractView;
+import net.protolauncher.ui.view.dialog.AlertView.AlertButton;
 import net.protolauncher.ui.view.tab.dialog.ProfileInfoTab;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Objects;
 
 import static net.protolauncher.App.LOGGER;
@@ -139,46 +142,61 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
      * Handles the delete button being pressed.
      */
     private void deleteButtonPressed(ActionEvent event) {
-        // TODO: Confirmation box.
         // Disable buttons
         abvButtons.getButton("save").setDisable(true);
         abvButtons.getButton("cancel").setDisable(true);
 
-        // Delete profile and close.
-        ProtoLauncher launcher = App.getInstance().getLauncher();
-        Profile profile = (Profile) dialog.getUserData();
+        // Confirmation
+        Alert alert = new Alert(
+            dialog,
+            "ProtoLauncher: Confirm Deletion",
+            "Are you sure you want to delete this profile?",
+            null,
+            EnumSet.of(AlertButton.YES_BAD, AlertButton.NO)
+        );
+        alert.setOnHidden(event1 -> {
+            if (alert.getUserData() != null && alert.getUserData() instanceof AlertButton && alert.getUserData() == AlertButton.YES) {
+                // Deletion confirmed; delete profile and close.
+                ProtoLauncher launcher = App.getInstance().getLauncher();
+                Profile profile = (Profile) dialog.getUserData();
 
-        // If there's no profile, just close
-        if (profile == null) {
-            dialog.setUserData(Boolean.FALSE);
-            dialog.hide();
-            return;
-        }
+                // If there's no profile, just close
+                if (profile == null) {
+                    dialog.setUserData(Boolean.FALSE);
+                    dialog.hide();
+                    return;
+                }
 
-        // The task for deleting a profile.
-        Task<Void> deleteProfileTask = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                launcher.removeProfile(profile);
-                return null;
+                // The task for deleting a profile.
+                Task<Void> deleteProfileTask = new Task<>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        launcher.removeProfile(profile);
+                        return null;
+                    }
+                };
+
+                // Handle success
+                deleteProfileTask.setOnSucceeded(event2 -> {
+                    dialog.setUserData(Boolean.TRUE);
+                    dialog.hide();
+                });
+
+                // Handle failure
+                deleteProfileTask.setOnFailed(event2 -> {
+                    LOGGER.debug("Profile delete failed: " + deleteProfileTask.getException().getMessage());
+                    dialog.setUserData(Boolean.FALSE);
+                    dialog.hide();
+                });
+
+                // Run the delete thread
+                new Thread(deleteProfileTask).start();
+            } else {
+                abvButtons.getButton("save").setDisable(false);
+                abvButtons.getButton("cancel").setDisable(false);
             }
-        };
-
-        // Handle success
-        deleteProfileTask.setOnSucceeded(event1 -> {
-            dialog.setUserData(Boolean.TRUE);
-            dialog.hide();
         });
-
-        // Handle failure
-        deleteProfileTask.setOnFailed(event1 -> {
-            LOGGER.debug("Profile delete failed: " + deleteProfileTask.getException().getMessage());
-            dialog.setUserData(Boolean.FALSE);
-            dialog.hide();
-        });
-
-        // Run the delete thread
-        new Thread(deleteProfileTask).start();
+        alert.show();
     }
 
     /**
