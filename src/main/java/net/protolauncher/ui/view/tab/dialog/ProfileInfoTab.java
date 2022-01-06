@@ -1,9 +1,6 @@
 package net.protolauncher.ui.view.tab.dialog;
 
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -69,6 +66,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         // Name Text Field
         txtName = new TextField();
         txtName.setId("pit-name");
+        txtName.setTooltip(new Tooltip("The name of this profile."));
 
         // Version Option
         vboxVersionContainer = new VBox();
@@ -86,6 +84,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         // Version ChoiceBox
         cbVersion = new ComboBox<>();
         cbVersion.setId("pit-version");
+        cbVersion.setTooltip(new Tooltip("The version of Minecraft this profile should launch."));
         hboxVersionHorizontalContainer.widthProperty().addListener((observable, oldValue, newValue) -> cbVersion.setPrefWidth(hboxVersionHorizontalContainer.getWidth() / 3.0 * 2));
         cbVersion.setConverter(new StringConverter<>() {
             @Override
@@ -120,6 +119,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         // Version Type ChoiceBox
         cbVersionType = new ComboBox<>();
         cbVersionType.setId("pit-version-type");
+        cbVersionType.setTooltip(new Tooltip("Changes the list of available Minecraft versions."));
         hboxVersionHorizontalContainer.widthProperty().addListener((observable, oldValue, newValue) -> cbVersionType.setPrefWidth(hboxVersionHorizontalContainer.getWidth() / 3.0));
         cbVersionType.getItems().addAll(VersionType.values());
         cbVersionType.setConverter(new StringConverter<>() {
@@ -149,6 +149,7 @@ public class ProfileInfoTab extends AbstractView<VBox> {
         // Latest Checkbox
         chkLatest = new CheckBox("Keep Profile up to Date");
         chkLatest.setId("pit-latest");
+        chkLatest.setTooltip(new Tooltip("Whether to keep this profile up to date with the latest version of Minecraft or not."));
         chkLatest.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 cbVersion.setValue(launcher.getVersionManifest().getVersionsOfType(cbVersionType.getValue()).get(0));

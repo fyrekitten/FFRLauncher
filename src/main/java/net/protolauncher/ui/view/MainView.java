@@ -98,7 +98,7 @@ public class MainView extends AbstractTabView {
         // Switch to the default tab
         if (launcher.getUserCount() == 0) {
             this.switchTab("users", true);
-        } else if (launcher.getProfiles(launcher.getConfig().getCurrentUserUuid()) == null) {
+        } else if (launcher.getProfilesWithGlobals(launcher.getConfig().getCurrentUserUuid()) == null) {
             this.switchTab("profiles", true);
         } else {
             this.switchTab("play", true);

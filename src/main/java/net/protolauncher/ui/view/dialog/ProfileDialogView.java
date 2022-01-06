@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.layout.BorderPane;
 import net.protolauncher.App;
 import net.protolauncher.api.Profile;
+import net.protolauncher.api.Profile.ProfileSettings;
 import net.protolauncher.api.Profile.Version;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.ui.dialog.Alert;
@@ -14,6 +15,7 @@ import net.protolauncher.ui.view.AbstractTabView;
 import net.protolauncher.ui.view.AbstractView;
 import net.protolauncher.ui.view.dialog.AlertView.AlertButton;
 import net.protolauncher.ui.view.tab.dialog.ProfileInfoTab;
+import net.protolauncher.ui.view.tab.dialog.ProfileSettingsTab;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -36,7 +38,8 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
             "Colors.css",
             "Components.css",
             "view/dialog/ProfileDialogView.css",
-            "view/tab/dialog/ProfileInfoTab.css"
+            "view/tab/dialog/ProfileInfoTab.css",
+            "view/tab/dialog/ProfileSettingsTab.css"
         );
         this.dialog = dialog;
         this.getLayout().setId("pdv-layout");
@@ -110,6 +113,13 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                     Version ver = finalProfile.getVersion();
                     ver.setLatest(pit.getLatest().isSelected());
                     finalProfile.setVersion(ver);
+                }
+
+                ProfileSettingsTab pst = (ProfileSettingsTab) atvTabs.getTab("profile-settings");
+                if (finalProfile.getProfileSettings().isGlobal() != pst.getGlobal().isSelected()) {
+                    ProfileSettings set = finalProfile.getProfileSettings();
+                    set.setGlobal(pst.getGlobal().isSelected());
+                    finalProfile.setProfileSettings(set);
                 }
 
                 // Update profile
@@ -232,6 +242,7 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
 
             // Tabs
             this.constructTab("it", "info", "Info", new ProfileInfoTab(dialog));
+            this.constructTab("pst", "profile-settings", "Profile Settings", new ProfileSettingsTab(dialog));
 
             // Switch to the default tab
             this.switchTab("info", true);

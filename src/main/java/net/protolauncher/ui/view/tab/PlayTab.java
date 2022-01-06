@@ -47,7 +47,7 @@ public class PlayTab extends AbstractView<VBox> {
         User currentUser = launcher.getCurrentUser();
         List<Profile> userProfiles = null;
         if (currentUser != null) {
-            userProfiles = launcher.getProfiles(currentUser.getUuid());
+            userProfiles = launcher.getProfilesWithGlobals(currentUser.getUuid());
         }
         Profile snapshotProfile = null;
         if (userProfiles != null) {

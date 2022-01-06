@@ -58,8 +58,19 @@
     -fx-padding: 0 0 0 15px;
     -fx-alignment: center-left;
 }
+.pt-profile-name-icon-container {
+    -fx-spacing: 8px;
+    -fx-alignment: center-left;
+}
 .pt-profile-name {
     -fx-font: 19pt "Raleway Medium";
+}
+.pt-profile-globe-icon {
+    -fx-background-color: -fx-color-subtext;
+    -fx-min-height: 15pt;
+    -fx-pref-height: 15pt;
+    -fx-pref-width: 15pt;
+    -fx-max-height: 15pt;
 }
 .pt-profile-game-version {
     -fx-font: 14pt "Raleway";
@@ -81,4 +92,10 @@
 }
 .pt-profile-edit-icon:focused {
     -fx-background-color: -fx-color-subtext;
+}
+.pt-profile-edit-icon.disabled {
+    -fx-background-color: -fx-color-background;
+}
+.pt-profile-edit-icon.disabled:hover {
+    -fx-cursor: pointer;
 }

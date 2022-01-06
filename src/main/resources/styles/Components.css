@@ -232,6 +232,13 @@
     -fx-background-color: -fx-color-background-dark;
 }
 
+/* Tooltips */
+.tooltip {
+    -fx-padding: 5px 10px;
+    -fx-font: 12pt "Raleway Medium";
+    -fx-show-delay: 250ms;
+}
+
 /* Options */
 .option > Label {
     -fx-font: 16pt "Raleway";

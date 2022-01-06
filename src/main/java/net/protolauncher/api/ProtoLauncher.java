@@ -506,7 +506,7 @@ public class ProtoLauncher {
             config.setCurrentUserUuid(user.getUuid());
 
             // Find last launched profile
-            List<Profile> userProfiles = this.getProfiles(user.getUuid());
+            List<Profile> userProfiles = this.getProfilesWithGlobals(user.getUuid());
             if (userProfiles != null) {
                 Profile profile = userProfiles.stream().max(Comparator.comparing(Profile::getLastLaunched)).orElse(null);
 
@@ -724,6 +724,34 @@ public class ProtoLauncher {
     }
 
     /**
+     * Gets a list of profiles by the provided owner combined with the list of global profiles.
+     *
+     * @param owner The UUID of the {@link User} whose profiles to get.
+     * @return A list of {@link Profile}s owned by the given user, or null if there are none.
+     */
+    public List<Profile> getProfilesWithGlobals(String owner) {
+        List<Profile> globalProfiles = this.getGlobalProfiles();
+        List<Profile> userProfiles = this.getProfiles(owner);
+        if (userProfiles != null) {
+            for (Profile profile : userProfiles) {
+                if (globalProfiles.stream().filter(p -> p.getUuid().equals(profile.getUuid())).findFirst().orElse(null) == null) {
+                    globalProfiles.add(profile);
+                }
+            }
+        }
+        return globalProfiles;
+    }
+
+    /**
+     * Gets a list of all the global profiles.
+     *
+     * @return A list of {@link Profile}s that are marked as global.
+     */
+    public List<Profile> getGlobalProfiles() {
+        return profiles.values().stream().flatMap(List::stream).filter(p -> p.getProfileSettings().isGlobal()).collect(Collectors.toList());
+    }
+
+    /**
      * Gets a profile by the provided owner and the profile UUID.
      *
      * @param owner The UUID of the {@link User} who owns this profile.
@@ -731,11 +759,16 @@ public class ProtoLauncher {
      * @return The {@link Profile} or null if not found.
      */
     public Profile getProfile(String owner, String uuid) {
+        Profile profile = null;
         List<Profile> userProfiles = this.getProfiles(owner);
-        if (userProfiles == null) {
-            return null;
+        if (userProfiles != null) {
+            profile = userProfiles.stream().filter(p -> p.getUuid().equals(uuid)).findFirst().orElse(null);
         }
-        return userProfiles.stream().filter(profile -> profile.getUuid().equals(uuid)).findFirst().orElse(null);
+        // If the profile's still null, it might be a global profile
+        if (profile == null) {
+            profile = this.getGlobalProfiles().stream().filter(p -> p.getUuid().equals(uuid)).findFirst().orElse(null);
+        }
+        return profile;
     }
 
     /**
@@ -870,11 +903,14 @@ public class ProtoLauncher {
             Files.delete(path);
         }
 
-        // Switch to the next possible profile
-        if (userProfiles.size() > 0) {
-            this.switchProfile(userProfiles.get(0));
-        } else {
-            this.switchProfile(null);
+        // Switch to the next possible profile if the current one is the one we deleted
+        if (profile.getUuid().equals(config.getCurrentProfileUuid())) {
+            List<Profile> possibleProfiles = this.getProfilesWithGlobals(profile.getOwner());
+            if (possibleProfiles.size() > 0) {
+                this.switchProfile(possibleProfiles.get(0));
+            } else {
+                this.switchProfile(null);
+            }
         }
     }
 
