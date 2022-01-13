@@ -74,11 +74,11 @@
     -fx-background-insets: 2px 1px 0 0;
     -fx-shape: "M208.789,29.972l31.819,31.82L91.763,210.637L0,118.876l31.819-31.82l59.944,59.942L208.789,29.972z";
 }
-.check-box:selected .box .mark {
-    -fx-background-color: -fx-color-text;
-}
 .check-box:hover .box .mark {
     -fx-background-color: -fx-color-subtext;
+}
+.check-box:selected .box .mark {
+    -fx-background-color: -fx-color-text;
 }
 
 /* Text Area */
