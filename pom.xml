@@ -4,9 +4,14 @@
 
     <!-- Project Information -->
     <name>ProtoLauncher</name>
+    <description>ProtoLauncher is a vanilla Minecraft launcher alternative that's faster, more flexible, and easier to use.</description>
     <groupId>net.protolauncher</groupId>
     <artifactId>protolauncher</artifactId>
     <version>1.0.0</version>
+    <organization>
+        <name>FireController#1847</name>
+        <url>https://www.firecontroller.dev/</url>
+    </organization>
 
     <!-- Profiles -->
     <profiles>
@@ -85,6 +90,37 @@
                                     <mainClass>net.protolauncher.Main</mainClass>
                                 </transformer>
                             </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Java Packager Plugin -->
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.6.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>net.protolauncher.Main</mainClass>
+                            <runnableJar>${project.build.directory}\protolauncher-${build.version}-shaded.jar</runnableJar>
+                            <copyDependencies>false</copyDependencies>
+                            <bundleJre>true</bundleJre>
+                            <customizedJre>false</customizedJre>
+                            <jreDirectoryName>runtime</jreDirectoryName>
+                            <jreMinVersion>${maven.compiler.source}</jreMinVersion>
+                            <platform>windows</platform>
+                            <url>https://www.protolauncher.net/</url>
+                            <winConfig>
+                                <generateSetup>true</generateSetup>
+                                <generateMsi>false</generateMsi>
+                                <generateMsm>false</generateMsm>
+                            </winConfig>
                         </configuration>
                     </execution>
                 </executions>

@@ -1,0 +1,56 @@
+\#define MyAppName "${info.name}"
+\#define MyAppVersion "${info.version}"
+\#define MyAppPublisher "${info.organizationName}"
+\#define MyAppURL "$!{info.organizationUrl}"
+\#define MyAppExeName "${info.executable.name}"
+\#define MyAppFolder "${info.name}"
+\#define MyAppLicense "$!{info.licenseFile.absolutePath}"
+\#define MyAppIcon "${info.iconFile.absolutePath}"
+
+[Setup]
+AppCopyright=Copyright (C) 2021 FireController#1847
+AppId={{2B160A34-CF0B-4FD0-9453-7F9F97A92387}}
+AppName={#MyAppName}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+AppVerName={#MyAppName} {#MyAppVersion}
+AppVersion={#MyAppVersion}
+ArchitecturesInstallIn64BitMode=x64
+Compression=lzma2/max
+DefaultDirName={userappdata}\{#MyAppName}
+DirExistsWarning=no
+DisableProgramGroupPage=yes
+DisableReadyPage=yes
+DisableWelcomePage=no
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=commandline dialog
+LicenseFile={#MyAppLicense}
+SetupIconFile={#MyAppIcon}
+SolidCompression=yes
+UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayName={#MyAppName}
+UsedUserAreasWarning=no
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Messages]
+WelcomeLabel2=This will install {#MyAppName} {#MyAppVersion} on your computer.
+
+[Tasks]
+Name: "start_menu"; Description: "Create a shortcut on the start menu"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "desktop_icon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+
+[Files]
+Source: "${info.appFolder}\{#MyAppName}.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "${info.appFolder}\{#MyAppName}.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "${info.appFolder}\runtime\*"; DestDir: "{app}\runtime"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Icons]
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\\${info.iconFile.name}"; Tasks: start_menu
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\\${info.iconFile.name}"; Tasks: desktop_icon
+
+[Run]
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser
