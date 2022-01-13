@@ -1468,7 +1468,11 @@ public class ProtoLauncher {
 
             // Update progress
             stepProgress.accept(totalSteps, ++currentStep);
-            stepInfo.accept(asset.getHash());
+            try {
+                stepInfo.accept(entry.getKey().substring(entry.getKey().lastIndexOf('/') + 1));
+            } catch (Exception e) {
+                stepInfo.accept(asset.getHash());
+            }
 
             // Download asset if it does not already exist
             String assetLocation = asset.getId() + "/" + asset.getHash();

@@ -154,7 +154,10 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadVersionTask.setOnFailed(event -> this.internal_launchFailed(downloadVersionTask.getException()));
 
         // Handle progress updates
-        downloadVersionTask.setProgressHandler(progress -> pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax()));
+        downloadVersionTask.setProgressHandler(progress -> {
+            pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax());
+            pgbProgressBar1.setProgress((Math.floor(pgbProgressBar1.getProgress() * 10) / 10.0) + pgbProgressBar2.getProgress() / 10);
+        });
 
         // Run the download version thread
         Thread downloadVersionThread = new Thread(downloadVersionTask);
@@ -200,8 +203,13 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadJavaTask.setOnFailed(event -> this.internal_launchFailed(downloadJavaTask.getException()));
 
         // Handle progress updates
-        downloadJavaTask.setProgressHandler(progress -> pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax()));
-        downloadJavaTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
+        downloadJavaTask.setProgressHandler(progress -> {
+            pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax());
+            pgbProgressBar1.setProgress((Math.floor(pgbProgressBar1.getProgress() * 10) / 10.0) + pgbProgressBar2.getProgress() / 10);
+        });
+        downloadJavaTask.setProgressHandler2(progress -> {
+            pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax());
+        });
 
         // Run the download java thread
         Thread downloadJavaThread = new Thread(downloadJavaTask);
@@ -242,8 +250,13 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadLibrariesTask.setOnFailed(event -> this.internal_launchFailed(downloadLibrariesTask.getException()));
 
         // Handle progress updates
-        downloadLibrariesTask.setProgressHandler(progress -> pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax()));
-        downloadLibrariesTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
+        downloadLibrariesTask.setProgressHandler(progress -> {
+            pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax());
+            pgbProgressBar1.setProgress((Math.floor(pgbProgressBar1.getProgress() * 10) / 10.0) + pgbProgressBar2.getProgress() / 10);
+        });
+        downloadLibrariesTask.setProgressHandler2(progress -> {
+            pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax());
+        });
 
         // Run the download libraries thread
         Thread downloadLibrariesThread = new Thread(downloadLibrariesTask);
@@ -284,8 +297,13 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         downloadAssetsTask.setOnFailed(event -> this.internal_launchFailed(downloadAssetsTask.getException()));
 
         // Handle progress updates
-        downloadAssetsTask.setProgressHandler(progress -> pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax()));
-        downloadAssetsTask.setProgressHandler2(progress -> pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax()));
+        downloadAssetsTask.setProgressHandler(progress -> {
+            pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax());
+            pgbProgressBar1.setProgress((Math.floor(pgbProgressBar1.getProgress() * 10) / 10.0) + pgbProgressBar2.getProgress() / 10);
+        });
+        downloadAssetsTask.setProgressHandler2(progress -> {
+            pgbProgressBar3.setProgress(progress.getWorkDone() / progress.getMax());
+        });
 
         // Run the download libraries thread
         Thread downloadAssetsThread = new Thread(downloadAssetsTask);
