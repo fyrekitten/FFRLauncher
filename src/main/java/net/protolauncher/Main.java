@@ -39,7 +39,11 @@ public class Main {
             alreadyRunning = true;
         }
         if (!alreadyRunning) {
-            Application.launch(App.class, args);
+            if (args.length > 0 && args[0].equals("cli")) {
+                Application.launch(AppCLI.class, args);
+            } else {
+                Application.launch(App.class, args);
+            }
         } else {
             System.exit(0);
         }

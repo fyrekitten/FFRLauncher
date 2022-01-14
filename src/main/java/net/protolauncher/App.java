@@ -22,13 +22,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.Objects;
-import java.util.Properties;
 
 public class App extends Application {
 
     // Constants
     public static final FeedbackLoggerWrapper LOGGER = new FeedbackLoggerWrapper("JavaFX");
-    public static final String VERSION = getLauncherVersion();
+    public static final String VERSION = ProtoLauncher.getVersion();
     private static final int MIN_WIDTH = 800;
     private static final int MIN_HEIGHT = 500;
     private static final int DEF_WIDTH = 900;
@@ -62,6 +61,12 @@ public class App extends Application {
     }
 
     // Setters
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+    public void setLauncher(ProtoLauncher launcher) {
+        this.launcher = launcher;
+    }
     public void setGame(@Nullable Process game) {
         this.game = game;
     }
@@ -243,20 +248,6 @@ public class App extends Application {
             LOGGER.error("Failed to load font " + name);
         } else {
             LOGGER.debug("Loaded font " + name);
-        }
-    }
-
-    /**
-     * Reads the maven.properties file and fetches the "version" property.
-     * @return The version.
-     */
-    private static String getLauncherVersion() {
-        try (InputStream stream = ProtoLauncher.class.getResourceAsStream("/maven.properties")) {
-            Properties props = new Properties();
-            props.load(stream);
-            return props.getProperty("version");
-        } catch (IOException e) {
-            return "UNKNOWN";
         }
     }
 

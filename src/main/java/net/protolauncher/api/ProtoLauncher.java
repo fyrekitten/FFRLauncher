@@ -39,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.*;
 import java.time.Duration;
@@ -1625,12 +1626,29 @@ public class ProtoLauncher {
         } else {
             command = javaPath + " -Xdiag " + arguments;
         }
+        logger.debug("Full command: " + command);
 
         // Launch the game
         ProcessBuilder builder = new ProcessBuilder(command.split(" "));
         builder.directory(runFolder.toFile());
         logger.debug("Launched.");
         return builder.inheritIO().start();
+    }
+
+    /**
+     * Attempts to fetch the appropriate version of the launcher
+     * from the 'maven.properties' resource, otherwise returns "UNKNOWN".
+     *
+     * @return The launcher version as a string or "UNKNOWN" if it failed to parse.
+     */
+    public static String getVersion() {
+        try (InputStream stream = ProtoLauncher.class.getResourceAsStream("/maven.properties")) {
+            Properties props = new Properties();
+            props.load(stream);
+            return props.getProperty("version");
+        } catch (IOException e) {
+            return "UNKNOWN";
+        }
     }
 
 }
