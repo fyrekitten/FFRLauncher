@@ -52,5 +52,10 @@ Source: "${info.appFolder}\runtime\*"; DestDir: "{app}\runtime"; Flags: ignoreve
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\\${info.iconFile.name}"; Tasks: start_menu
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\\${info.iconFile.name}"; Tasks: desktop_icon
 
+[Registry]
+Root: HKA; Subkey: "Software\Classes\protolauncher"; ValueType: "string"; ValueData: "URL:protolauncher Protocol"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\protolauncher"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\protolauncher\shell\open\command"; ValueType: "string"; ValueData: """{app}\{#MyAppName}.exe"" %1"
+
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser

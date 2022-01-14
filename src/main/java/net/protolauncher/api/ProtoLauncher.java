@@ -1651,4 +1651,18 @@ public class ProtoLauncher {
         }
     }
 
+    /**
+     * Creates a desktop shortcut for the given profile.
+     */
+    public void createDesktopShortcut(Profile profile) throws IOException {
+        if (SystemInfo.OS_NAME.equals("windows")) {
+            Path home = Path.of(SystemInfo.USER_HOME);
+            String shortcut = "[InternetShortcut]\r\nURL=protolauncher://launch/--owner=" + profile.getOwner() + "/--uuid=" + profile.getUuid() + "\r\n";
+            Path shortcutFile = home.resolve(profile.getName() + ".url");
+            Files.writeString(shortcutFile, shortcut);
+        } else {
+            logger.warn("Unable to create desktop shortcut on the following platform: " + SystemInfo.OS_NAME);
+        }
+    }
+
 }

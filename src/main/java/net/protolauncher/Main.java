@@ -39,7 +39,7 @@ public class Main {
             alreadyRunning = true;
         }
         if (!alreadyRunning) {
-            if (args.length > 0 && args[0].equals("cli")) {
+            if (args.length > 0 && (args[0].equals("cli") || args[0].contains("protolauncher://"))) {
                 Application.launch(AppCLI.class, args);
             } else {
                 Application.launch(App.class, args);

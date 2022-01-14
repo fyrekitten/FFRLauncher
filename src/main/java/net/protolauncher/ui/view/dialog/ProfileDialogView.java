@@ -16,6 +16,7 @@ import net.protolauncher.ui.view.AbstractView;
 import net.protolauncher.ui.view.dialog.AlertView.AlertButton;
 import net.protolauncher.ui.view.tab.dialog.ProfileInfoTab;
 import net.protolauncher.ui.view.tab.dialog.ProfileSettingsTab;
+import net.protolauncher.util.SystemInfo;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -148,6 +149,22 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
     }
 
     /**
+     * Handles the create shortcut button being pressed.
+     */
+    private void createShortcutButtonPressed(ActionEvent event) {
+        Profile profile = (Profile) dialog.getUserData();
+        if (profile != null) {
+            try {
+                App.getInstance().getLauncher().createDesktopShortcut(profile);
+                abvButtons.getButton("create-shortcut").setDisable(true);
+            } catch (IOException e) {
+                LOGGER.debug("Profile shortcut creation failed: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Handles the cancel button being pressed.
      */
     private void cancelButtonPressed(ActionEvent event) {
@@ -275,6 +292,10 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
 
             // Buttons
             if (dialog.getUserData() != null) {
+                if (SystemInfo.OS_NAME.equals("windows")) {
+                    this.constructButton("pdv-button-create-shortcut", "create-shortcut", "Create Shortcut", ProfileDialogView.this::createShortcutButtonPressed);
+                    this.getButton("create-shortcut").getButton().getStyleClass().add("blue");
+                }
                 this.constructButton("pdv-button-delete", "delete", "Delete", ProfileDialogView.this::deleteButtonPressed);
                 this.getButton("delete").getButton().getStyleClass().add("red");
             }

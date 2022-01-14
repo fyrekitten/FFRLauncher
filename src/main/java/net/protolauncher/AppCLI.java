@@ -1,5 +1,6 @@
 package net.protolauncher;
 
+import com.sun.javafx.application.ParametersImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -24,10 +25,17 @@ public class AppCLI extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Platform.setImplicitExit(true);
+        Parameters params = this.getParameters();
+
+        // Parse URL if the arguments are a URL
+        String firstArgument = this.getParameters().getRaw().get(0);
+        if (firstArgument.contains("protolauncher://")) {
+            params = new ParametersImpl(("cli/" + firstArgument.substring("protolauncher://".length())).split("/"));
+        }
 
         // Handle commands
-        List<String> args = this.getParameters().getUnnamed();
-        if (this.getParameters().getRaw().size() == 1 || args.contains("-h") || args.contains("--help") || args.contains("help")) {
+        List<String> args = params.getUnnamed();
+        if (params.getRaw().size() == 1 || args.contains("-h") || args.contains("--help") || args.contains("help")) {
             System.out.println("Commands:");
             System.out.printf("%-15s %s\n", "help", "Shows this help screen.");
             System.out.printf("%-15s %s\n", "version", "Prints the launcher version.");
@@ -36,7 +44,7 @@ public class AppCLI extends Application {
             System.out.println("ProtoLauncher v" + VERSION);
         } else if (args.contains("-launch") || args.contains("--launch") || args.contains("launch")) {
             try {
-                this.launch(primaryStage, this.getParameters());
+                this.launch(primaryStage, params);
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error popup.

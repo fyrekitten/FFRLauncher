@@ -281,6 +281,16 @@
 .plb-button.red:disabled {
     -fx-background-color: -fx-color-red-dark;
 }
+.plb-button.blue {
+    -fx-background-color: -fx-color-blue;
+}
+.plb-button.blue:hover,
+.plb-button.blue:focused {
+    -fx-background-color: -fx-color-blue-light;
+}
+.plb-button.blue:disabled {
+    -fx-background-color: -fx-color-blue-dark;
+}
 
 /* ProtoLauncher Play Button */
 .plpb-text-container {
