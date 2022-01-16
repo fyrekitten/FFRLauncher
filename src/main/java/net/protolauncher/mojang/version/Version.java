@@ -4,6 +4,7 @@ import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.library.Library;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -85,6 +86,44 @@ public class Version {
     }
     public VersionType getType() {
         return type;
+    }
+
+    /**
+     * Merges this version with another version. Useful for modding.
+     * <br/><br/>
+     * Prioritizes <code>this</code> version. The following data will be copied from the given version:
+     * <ul>
+     *     <li>Main-Class will transfer</li>
+     *     <li>Arguments will be appended</li>
+     *     <li>Libraries are combined</li>
+     * </ul>
+     * <br/>
+     * Depending on how the modified version file works, sometimes their libraries must come first.
+     * The "our libs first" parameter will put <code>this</code> version's libraries first in the array.
+     * Otherwise, the provided version's libraries will come first.
+     *
+     * @param version The version to merge with <code>this</code> version.
+     * @param ourLibsFirst Whether we should put our libraries first or theirs.
+     * @return The merged version.
+     */
+    public Version merge(Version version, boolean ourLibsFirst) {
+        this.mainClass = version.mainClass;
+        this.arguments = this.arguments.merge(version.arguments);
+        List<Library> libs;
+        if (ourLibsFirst) {
+            libs = new ArrayList<>(this.libraries);
+            libs.addAll(version.libraries);
+        } else {
+            libs = new ArrayList<>(version.libraries);
+            libs.addAll(this.libraries);
+        }
+        this.libraries = libs;
+        if (this.minecraftArguments == null) {
+            this.minecraftArguments = version.minecraftArguments;
+        } else {
+            this.minecraftArguments += version.minecraftArguments;
+        }
+        return this;
     }
 
     /**

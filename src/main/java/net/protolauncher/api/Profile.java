@@ -2,6 +2,8 @@ package net.protolauncher.api;
 
 import com.google.gson.annotations.Since;
 import net.protolauncher.api.Config.FileLocation;
+import net.protolauncher.mods.version.ModdedVersionInfo;
+import net.protolauncher.mods.version.ModdedVersionType;
 import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionType;
 import org.jetbrains.annotations.Nullable;
@@ -136,6 +138,12 @@ public class Profile {
         @Since(1.0)
         private String minecraft;
         @Since(1.0)
+        @Nullable
+        private ModdedVersionType moddedType;
+        @Since(1.0)
+        @Nullable
+        private String modded;
+        @Since(1.0)
         private boolean latest;
 
         /**
@@ -145,6 +153,8 @@ public class Profile {
         public Version(VersionInfo mcv) {
             this.type = mcv.getType();
             this.minecraft = mcv.getId();
+            this.moddedType = null;
+            this.modded = null;
             this.latest = false;
         }
 
@@ -155,6 +165,14 @@ public class Profile {
         public String getMinecraft() {
             return minecraft;
         }
+        @Nullable
+        public ModdedVersionType getModdedType() {
+            return moddedType;
+        }
+        @Nullable
+        public String getModded() {
+            return modded;
+        }
         public boolean isLatest() {
             return latest;
         }
@@ -163,6 +181,11 @@ public class Profile {
         public Version setVersion(VersionInfo mcv) {
             this.type = mcv.getType();
             this.minecraft = mcv.getId();
+            return this;
+        }
+        public Version setModdedVersion(@Nullable ModdedVersionInfo modded) {
+            this.moddedType = modded != null ? modded.getType() : null;
+            this.modded = modded != null ? modded.getLv() : null;
             return this;
         }
         public Version setLatest(boolean latest) {

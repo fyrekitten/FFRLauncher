@@ -35,6 +35,41 @@ public class VersionArguments {
     }
 
     /**
+     * Merges this VersionArguments with another.
+     *
+     * @param arguments The arguments to merge into this one.
+     * @return The merged arguments.
+     * @see Version#merge(Version, boolean)
+     */
+    public VersionArguments merge(VersionArguments arguments) {
+        if (arguments == null) {
+            return this;
+        }
+
+        // Merge game arguments
+        this.game += arguments.game;
+        if (arguments.gameOriginal != null) {
+            if (this.gameOriginal == null) {
+                this.gameOriginal = arguments.gameOriginal;
+            } else {
+                this.gameOriginal.getAsJsonArray().addAll(arguments.gameOriginal.getAsJsonArray());
+            }
+        }
+
+        // Merge jvm arguments
+        this.jvm += arguments.jvm;
+        if (arguments.jvmOriginal != null) {
+            if (this.jvmOriginal == null) {
+                this.jvmOriginal = arguments.jvmOriginal;
+            } else {
+                this.jvmOriginal.getAsJsonArray().addAll(arguments.jvmOriginal.getAsJsonArray());
+            }
+        }
+
+        return this;
+    }
+
+    /**
      * Handles converting the arguments to a string and back into an array.
      * <br/><br/>
      * We need to preserve the original array due to the fact that it may be modified,
