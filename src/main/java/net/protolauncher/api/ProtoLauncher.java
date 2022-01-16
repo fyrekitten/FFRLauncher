@@ -12,6 +12,7 @@ import net.protolauncher.api.function.StepProgressConsumer;
 import net.protolauncher.api.gson.DurationTypeAdapter;
 import net.protolauncher.api.gson.InstantTypeAdapter;
 import net.protolauncher.log4j.FeedbackLoggerWrapper;
+import net.protolauncher.mods.version.ModdedVersionManifest;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
@@ -68,6 +69,8 @@ public class ProtoLauncher {
     // Mojang Variables
     @Nullable
     private VersionManifest versionManifest;
+    @Nullable
+    private ModdedVersionManifest moddedVersionManifest;
     private MojangAPI mojangApi;
     private Yggdrasil yggdrasil;
     private MicrosoftAuth microsoftAuth;
@@ -134,6 +137,10 @@ public class ProtoLauncher {
     @Nullable
     public VersionManifest getVersionManifest() {
         return versionManifest;
+    }
+    @Nullable
+    public ModdedVersionManifest getModdedVersionManifest() {
+        return moddedVersionManifest;
     }
     public Yggdrasil getYggdrasil() {
         return yggdrasil;
@@ -1075,6 +1082,34 @@ public class ProtoLauncher {
         // Parse the manifest
         versionManifest = gson.fromJson(Files.newBufferedReader(path), VersionManifest.class);
         logger.debug("Version manifest loaded.");
+    }
+
+    /**
+     * Loads the {@link ModdedVersionManifest}, downloading it if necessary.
+     * @param downloadProgress Called to show the download progress.
+     * @throws IOException Thrown if something goes wrong loading or downloading the modded version manifest.
+     */
+    public void loadModdedVersionManifest(DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Loading modded version manifest...");
+        URL url = config.getEndpoints().getModdedVersionManifest();
+        Path path = FileLocation.MODDED_VERSION_MANIFEST;
+
+        // Check if it needs to be downloaded and, if it does, then download it
+        Instant nextManifestUpdate = config.getLastModdedManifestUpdate().plus(config.getMaxManifestAge());
+        if (!Files.exists(path) || Instant.now().isAfter(nextManifestUpdate)) {
+            logger.debug("Modded version manifest update requested. Downloading...");
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
+            }
+            long size = Network.fetchFileSize(url);
+            Network.download(url, path, progress -> downloadProgress.accept(size, progress));
+            config.setLastModdedManifestUpdate(Instant.now());
+            this.saveConfig();
+        }
+
+        // Parse the manifest
+        moddedVersionManifest = gson.fromJson(Files.newBufferedReader(path), ModdedVersionManifest.class);
+        logger.debug("Modded version manifest loaded.");
     }
 
     /**

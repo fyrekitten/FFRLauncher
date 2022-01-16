@@ -1,6 +1,7 @@
 package net.protolauncher.api;
 
 import com.google.gson.annotations.Since;
+import net.protolauncher.mods.version.ModdedVersionManifest;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
@@ -40,6 +41,10 @@ public class Config {
      */
     @Since(1.0)
     private Instant lastManifestUpdate;
+    /**
+     * The {@link Instant} in which the modded manifest was last updated.
+     */
+    private Instant lastModdedManifestUpdate;
     /**
      * The maximum {@link Duration} that the manifest can be in age.
      */
@@ -88,6 +93,9 @@ public class Config {
     public Instant getLastManifestUpdate() {
         return lastManifestUpdate;
     }
+    public Instant getLastModdedManifestUpdate() {
+        return lastModdedManifestUpdate;
+    }
     public Duration getMaxManifestAge() {
         return maxManifestAge;
     }
@@ -121,6 +129,10 @@ public class Config {
         this.lastManifestUpdate = lastManifestUpdate;
         return this;
     }
+    public Config setLastModdedManifestUpdate(Instant lastModdedManifestUpdate) {
+        this.lastModdedManifestUpdate = lastModdedManifestUpdate;
+        return this;
+    }
     public Config setMaxManifestAge(Duration maxManifestAge) {
         this.maxManifestAge = maxManifestAge;
         return this;
@@ -148,6 +160,7 @@ public class Config {
         this.currentUserUuid = null;
         this.currentProfileUuid = null;
         this.lastManifestUpdate = Instant.MIN;
+        this.lastModdedManifestUpdate = Instant.MIN;
         this.maxManifestAge = Duration.ofHours(12);
         this.endpoints = new Endpoints();
         this.prettyPrint = false;
@@ -167,6 +180,11 @@ public class Config {
          */
         @Since(1.0)
         private URL versionManifest;
+        /**
+         * The URL to a {@link ModdedVersionManifest}.
+         */
+        @Since(1.0)
+        private URL moddedVersionManifest;
         /**
          * The URL to the Mojang Asset API.
          */
@@ -224,6 +242,7 @@ public class Config {
         private Endpoints() {
             try {
                 this.versionManifest = new URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json");
+                this.moddedVersionManifest = new URL("https://cdn.firecontroller.dev/projects/protolauncher/modded_manifest.json");
                 this.assetApi = new URL("https://resources.download.minecraft.net/");
                 this.mojangApi = new URL("https://api.mojang.com/");
                 this.minecraftServicesApi = new URL("https://api.minecraftservices.com/");
@@ -244,6 +263,9 @@ public class Config {
         // Getters
         public URL getVersionManifest() {
             return versionManifest;
+        }
+        public URL getModdedVersionManifest() {
+            return moddedVersionManifest;
         }
         public URL getAssetApi() {
             return assetApi;
@@ -376,6 +398,7 @@ public class Config {
         // Mojang
         public static final Path MOJANG_FOLDER = Path.of("mojang/");
         public static final Path VERSION_MANIFEST = MOJANG_FOLDER.resolve("version_manifest.json");
+        public static final Path MODDED_VERSION_MANIFEST = MOJANG_FOLDER.resolve("modded_version_manifest.json");
         public static final Path VERSIONS_FOLDER = MOJANG_FOLDER.resolve("versions/");
         public static final Path LIBRARIES_FOLDER = MOJANG_FOLDER.resolve("libraries/");
         public static final Path ASSETS_FOLDER = MOJANG_FOLDER.resolve("assets/");

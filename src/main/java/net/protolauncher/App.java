@@ -110,7 +110,7 @@ public class App extends Application {
             LauncherTask<Void> initializeTask = new LauncherTask<>() {
                 @Override
                 protected Void call() throws Exception {
-                    final int totalSteps = 6;
+                    final int totalSteps = 7;
                     int currentStep = 0;
 
                     // Load config
@@ -122,6 +122,13 @@ public class App extends Application {
                     int versionManifestStep = currentStep;
                     launcher.loadVersionManifest((total, transferred) -> {
                         updateProgress(versionManifestStep + (transferred / (double) total), totalSteps);
+                    });
+
+                    // Load modded version manifest
+                    updateProgress(++currentStep, totalSteps);
+                    int moddedVersionManifestStep = currentStep;
+                    launcher.loadModdedVersionManifest((total, transferred) -> {
+                        updateProgress(moddedVersionManifestStep + (transferred / (double) total), totalSteps);
                     });
 
                     // Load users
