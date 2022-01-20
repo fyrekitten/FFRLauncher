@@ -19,6 +19,8 @@ import net.protolauncher.ui.view.tab.dialog.ProfileSettingsTab;
 import net.protolauncher.util.SystemInfo;
 
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -85,7 +87,7 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                 return;
             }
             try {
-                profile = new Profile(pit.getName(), pit.getVersion(), Objects.requireNonNull(launcher.getCurrentUser()));
+                profile = new Profile(pit.getName().isEmpty() ? "Invalid Name" : pit.getName(), pit.getVersion(), Objects.requireNonNull(launcher.getCurrentUser()));
             } catch (IOException e) {
                 // Man, stuff must be really going wrong. Just abort.
                 e.printStackTrace();
@@ -103,7 +105,13 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                 // Update data from all tabs
                 ProfileInfoTab pit = (ProfileInfoTab) atvTabs.getTab("info");
                 if (!finalProfile.getName().equals(pit.getName())) {
-                    finalProfile.setName(pit.getName());
+                    if (pit.getName().isEmpty()) {
+                        // TODO: Disable save button if name is empty
+                        LOGGER.warn("Profile name was empty!");
+                        finalProfile.setName("Invalid Name");
+                    } else {
+                        finalProfile.setName(pit.getName());
+                    }
                 }
                 if (!finalProfile.getVersion().getMinecraft().equals(pit.getVersion().getId())) {
                     Version ver = finalProfile.getVersion();
@@ -122,10 +130,19 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                     Version ver = finalProfile.getVersion();
                     ver.setModdedVersion(null);
                     finalProfile.setVersion(ver);
-                } else if (!Objects.equals(finalProfile.getVersion().getModded(), pit.getFabricVersion().getLv())) {
+                } else if (pit.getInjectFabric().isSelected() && !Objects.equals(finalProfile.getVersion().getModded(), pit.getFabricVersion().getLv())) {
                     Version ver = finalProfile.getVersion();
                     ver.setModdedVersion(pit.getFabricVersion());
                     finalProfile.setVersion(ver);
+                }
+                if (pit.isPathModified() && !finalProfile.getPath().equals(pit.getPath())) {
+                    // Validate path
+                    try {
+                        Path.of(pit.getPath());
+                        finalProfile.setPath(pit.getPath());
+                    } catch (InvalidPathException e) {
+                        LOGGER.warn("Invalid path!");
+                    }
                 }
 
                 ProfileSettingsTab pst = (ProfileSettingsTab) atvTabs.getTab("profile-settings");

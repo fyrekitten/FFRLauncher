@@ -46,6 +46,7 @@ public class Profile {
         this.uuid = UUID.randomUUID().toString().replace("-", "");
         this.owner = owner.getUuid();
         this.path = getDefaultLocation(name, owner.getUuid()).toAbsolutePath().toString();
+        Files.createDirectories(Path.of(this.path));
         this.lastLaunched = Instant.MIN;
         this.version = new Version(mcv);
         this.launchSettings = new LaunchSettings();
@@ -87,8 +88,19 @@ public class Profile {
         this.owner = owner;
         return this;
     }
-    public Profile setPath(String path) {
-        this.path = path;
+    public Profile setPath(String path) throws IOException {
+        // Delete the old folder if it's empty
+        Path origPath = Path.of(this.path);
+        if (Files.isDirectory(origPath) && Files.list(origPath).findAny().isEmpty()) {
+            Files.delete(origPath);
+        }
+
+        // Create the new path
+        Path newPath = Path.of(path);
+        Files.createDirectories(newPath);
+
+        // Set it
+        this.path = newPath.toAbsolutePath().toString();
         return this;
     }
     public Profile setLastLaunched(Instant lastLaunched) {
@@ -123,7 +135,6 @@ public class Profile {
             count++;
             loc = FileLocation.PROFILES_FOLDER.resolve(owner + "/" + name + "-" + count + "/");
         }
-        Files.createDirectories(loc);
         return loc;
     }
 

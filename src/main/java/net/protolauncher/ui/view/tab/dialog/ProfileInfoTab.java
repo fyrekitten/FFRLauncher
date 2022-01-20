@@ -17,6 +17,9 @@ import net.protolauncher.ui.components.PLScrollPane;
 import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.AbstractView;
 
+import java.io.IOException;
+import java.util.Objects;
+
 public class ProfileInfoTab extends AbstractView<Pane> {
 
     // References
@@ -37,6 +40,10 @@ public class ProfileInfoTab extends AbstractView<Pane> {
     private CheckBox chkLatest;
     private CheckBox chkInjectFabric;
     private ComboBox<ModdedVersionInfo> cbFabricVersion;
+    private VBox vboxPathsContainer;
+    private Label lblPaths;
+    private TextField txtPath;
+    private boolean pathModified = false;
 
     // Constructor
     public ProfileInfoTab(ProfileDialog dialog) {
@@ -63,6 +70,12 @@ public class ProfileInfoTab extends AbstractView<Pane> {
     }
     public ModdedVersionInfo getFabricVersion() {
         return cbFabricVersion.getValue();
+    }
+    public boolean isPathModified() {
+        return pathModified;
+    }
+    public String getPath() {
+        return txtPath.getText();
     }
 
     // AbstractView Implementation
@@ -91,13 +104,23 @@ public class ProfileInfoTab extends AbstractView<Pane> {
         txtName = new TextField();
         txtName.setId("pit-name");
         txtName.setTooltip(new Tooltip("The name of this profile."));
+        txtName.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!pathModified) {
+                try {
+                    txtPath.setText(Profile.getDefaultLocation(!txtName.getText().isEmpty() ? txtName.getText().trim() : "(profile name)", Objects.requireNonNull(launcher.getCurrentUser()).getUuid()).toAbsolutePath().toString());
+                } catch (IOException e) {
+                    txtPath.setText("???");
+                    txtPath.setDisable(true);
+                }
+            }
+        });
 
         // Version Option
         vboxVersionContainer = new VBox();
         vboxVersionContainer.setId("pit-version-container");
         vboxVersionContainer.getStyleClass().add("option");
 
-        // Version label
+        // Version Label
         lblVersion = new Label("Version");
         lblVersion.setId("pit-version-label");
 
@@ -238,6 +261,25 @@ public class ProfileInfoTab extends AbstractView<Pane> {
             }
         });
 
+        // Paths Option
+        vboxPathsContainer = new VBox();
+        vboxPathsContainer.setId("pit-paths-container");
+        vboxPathsContainer.getStyleClass().add("option");
+
+        // Paths Label
+        lblPaths = new Label("Profile Path");
+        lblPaths.setId("pit-paths-label");
+
+        // Paths Text Field
+        txtPath = new TextField();
+        txtPath.setId("pit-path");
+        txtPath.setTooltip(new Tooltip("The folder on your system where this profile will launch."));
+        txtPath.setOnKeyPressed(event -> {
+            if (!pathModified) {
+                pathModified = true;
+            }
+        });
+
         // Check for an existing profile and apply autofills
         Profile existingProfile = (Profile) this.dialog.getUserData();
         if (existingProfile != null) {
@@ -254,6 +296,8 @@ public class ProfileInfoTab extends AbstractView<Pane> {
             } else if (moddedType == ModdedVersionType.FABRIC) {
                 chkInjectFabric.setSelected(true);
             }
+            pathModified = true;
+            txtPath.setText(existingProfile.getPath());
         } else {
             txtName.setText("New Profile");
             cbVersionType.setValue(VersionType.RELEASE);
@@ -269,7 +313,8 @@ public class ProfileInfoTab extends AbstractView<Pane> {
         vboxNameContainer.getChildren().addAll(lblName, txtName);
         hboxVersionHorizontalContainer.getChildren().addAll(cbVersion, cbVersionType);
         vboxVersionContainer.getChildren().addAll(lblVersion, hboxVersionHorizontalContainer, chkLatest, chkInjectFabric, cbFabricVersion);
-        vboxContainer.getChildren().addAll(vboxNameContainer, vboxVersionContainer);
+        vboxPathsContainer.getChildren().addAll(lblPaths, txtPath);
+        vboxContainer.getChildren().addAll(vboxNameContainer, vboxVersionContainer, vboxPathsContainer);
         spScrollContainer.setContent(vboxContainer);
         spScrollContainer.applyScrollMultiplier();
         layout.getChildren().add(spScrollContainer);
