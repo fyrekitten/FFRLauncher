@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Consumer;
@@ -137,7 +138,7 @@ public class Network {
 
         // Fetch streams
         InputStream in = fetch(url);
-        OutputStream out = Files.newOutputStream(path);
+        OutputStream out = Files.newOutputStream(path, LinkOption.NOFOLLOW_LINKS);
 
         // Perform transfer (equivalent to InputStream#transferTo)
         long transferred = 0;
@@ -160,7 +161,7 @@ public class Network {
      * @see Network#fetch(URL)
      */
     public static void download(URL url, Path path) throws IOException {
-        Files.copy(fetch(url), path, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(fetch(url), path, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS);
     }
 
     /**

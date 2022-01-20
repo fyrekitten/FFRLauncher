@@ -163,7 +163,7 @@ public class ProtoLauncher {
         Path path = FileLocation.CONFIG;
 
         // Check if one exists, and if not, generate a new one
-        if (!Files.exists(path)) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
@@ -210,7 +210,7 @@ public class ProtoLauncher {
     public void saveConfig() throws IOException {
         logger.debug("Saving configuration...");
         Path path = FileLocation.CONFIG;
-        Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Configuration saved.");
     }
 
@@ -224,7 +224,7 @@ public class ProtoLauncher {
         Path path = FileLocation.USERS;
 
         // Check if it exists, and if not, make a new list
-        if (!Files.exists(path)) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
@@ -243,7 +243,7 @@ public class ProtoLauncher {
     public void saveUsers() throws IOException {
         logger.debug("Saving users...");
         Path path = FileLocation.USERS;
-        Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Users saved.");
     }
 
@@ -674,7 +674,7 @@ public class ProtoLauncher {
     public Path fetchUserAvatar(@Nullable String uuid) throws IOException {
         String id = uuid != null ? uuid : "MHF_Steve";
         Path location = FileLocation.CACHE_FOLDER.resolve("avatars/" + id + ".png");
-        if (!Files.exists(location)) {
+        if (!Files.exists(location, LinkOption.NOFOLLOW_LINKS)) {
             Files.createDirectories(location.getParent());
             URL endpoint = new URL(config.getEndpoints().getAvatarApi().toString().replace("%uuid%", id));
             Network.download(endpoint, location);
@@ -692,7 +692,7 @@ public class ProtoLauncher {
         Path path = FileLocation.PROFILES;
 
         // Check if it exists, and if not, make a new list
-        if (!Files.exists(path)) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
@@ -711,7 +711,7 @@ public class ProtoLauncher {
     public void saveProfiles() throws IOException {
         logger.debug("Saving profiles...");
         Path path = FileLocation.PROFILES;
-        Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Profiles saved.");
     }
 
@@ -911,7 +911,7 @@ public class ProtoLauncher {
 
         // Remove the folder if it's empty
         Path path = Path.of(profile.getPath());
-        if (Files.isDirectory(path) && Files.list(path).findAny().isEmpty()) {
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS) && Files.list(path).findAny().isEmpty()) {
             Files.delete(path);
         }
 
@@ -1072,7 +1072,7 @@ public class ProtoLauncher {
 
         // Check if it needs to be downloaded and, if it does, then download it
         Instant nextManifestUpdate = config.getLastManifestUpdate().plus(config.getMaxManifestAge());
-        if (!Files.exists(path) || Instant.now().isAfter(nextManifestUpdate)) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS) || Instant.now().isAfter(nextManifestUpdate)) {
             logger.debug("Version manifest update requested. Downloading...");
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
@@ -1100,7 +1100,7 @@ public class ProtoLauncher {
 
         // Check if it needs to be downloaded and, if it does, then download it
         Instant nextManifestUpdate = config.getLastModdedManifestUpdate().plus(config.getMaxManifestAge());
-        if (!Files.exists(path) || Instant.now().isAfter(nextManifestUpdate)) {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS) || Instant.now().isAfter(nextManifestUpdate)) {
             logger.debug("Modded version manifest update requested. Downloading...");
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
@@ -1131,7 +1131,7 @@ public class ProtoLauncher {
         Path file = folder.resolve(id + ".json");
 
         // Check if it needs to be downloaded and, if it does, then download it
-        if (!Files.exists(file)) {
+        if (!Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
             if (file.getParent() != null) {
                 Files.createDirectories(file.getParent());
             }
@@ -1167,7 +1167,7 @@ public class ProtoLauncher {
         Artifact artifact = version.getDownloads().getClient();
 
         // Check if it needs to be downloaded and, if it does, then download it
-        if (!Files.exists(file)) {
+        if (!Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
             if (file.getParent() != null) {
                 Files.createDirectories(file.getParent());
             }
@@ -1309,7 +1309,7 @@ public class ProtoLauncher {
 
         // Download file
         Path compressedFile = folder.resolve("jre-1.8" + (isTarFile ? ".tar.gz" : ".zip"));
-        if (!Files.exists(compressedFile)) {
+        if (!Files.exists(compressedFile, LinkOption.NOFOLLOW_LINKS)) {
             long size = Network.fetchFileSize(url);
             Network.download(url, compressedFile, progress -> downloadProgress.accept(size, progress));
         }
@@ -1323,23 +1323,23 @@ public class ProtoLauncher {
         } else {
             javaPath = folder.resolve("bin/java");
         }
-        if (!Files.exists(javaPath)) {
+        if (!Files.exists(javaPath, LinkOption.NOFOLLOW_LINKS)) {
             // Create archive stream
             ArchiveInputStream archive;
             if (isTarFile) {
                 // Extract tar from tar.gz
                 Path tarPath = folder.resolve("jre-1.8.tar");
-                if (!Files.exists(tarPath)) {
-                    GZIPInputStream gzipInputStream = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(compressedFile)));
-                    Files.copy(gzipInputStream, tarPath);
+                if (!Files.exists(tarPath, LinkOption.NOFOLLOW_LINKS)) {
+                    GZIPInputStream gzipInputStream = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(compressedFile, LinkOption.NOFOLLOW_LINKS)));
+                    Files.copy(gzipInputStream, tarPath, LinkOption.NOFOLLOW_LINKS);
                     gzipInputStream.close();
                 }
 
                 // Create archive
-                archive = new ArchiveStreamFactory().createArchiveInputStream("tar", new BufferedInputStream(Files.newInputStream(tarPath)));
+                archive = new ArchiveStreamFactory().createArchiveInputStream("tar", new BufferedInputStream(Files.newInputStream(tarPath, LinkOption.NOFOLLOW_LINKS)));
             } else {
                 // Create archive
-                archive = new ArchiveStreamFactory().createArchiveInputStream("zip", new BufferedInputStream(Files.newInputStream(compressedFile)));
+                archive = new ArchiveStreamFactory().createArchiveInputStream("zip", new BufferedInputStream(Files.newInputStream(compressedFile, LinkOption.NOFOLLOW_LINKS)));
             }
 
             // Extract files
@@ -1351,7 +1351,7 @@ public class ProtoLauncher {
                 Path entryPath = folder.resolve(path);
                 if (!entry.isDirectory()) {
                     Files.createDirectories(entryPath.getParent());
-                    Files.copy(archive, entryPath, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(archive, entryPath, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS);
                 }
             }
 
@@ -1360,7 +1360,7 @@ public class ProtoLauncher {
         }
 
         // Determine if the java file still doesn't exist, return if it still exists
-        if (!Files.exists(javaPath)) {
+        if (!Files.exists(javaPath, LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("Unable to find java location!");
         }
         stepProgress.accept(totalSteps, ++currentStep);
@@ -1422,7 +1422,7 @@ public class ProtoLauncher {
 
                 // Download if it does not already exist
                 Path jarPath = FileLocation.LIBRARIES_FOLDER.resolve(jarArtifact.getPath());
-                if (!Files.exists(jarPath)) {
+                if (!Files.exists(jarPath, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(jarPath.getParent());
                     URL url = new URL(jarArtifact.getUrl());
                     long size = jarArtifact.getSize();
@@ -1444,7 +1444,7 @@ public class ProtoLauncher {
 
                 // Download if it does not already exist
                 Path natPath = FileLocation.LIBRARIES_FOLDER.resolve(natArtifact.getPath());
-                if (!Files.exists(natPath)) {
+                if (!Files.exists(natPath, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(natPath.getParent());
                     URL url = new URL(natArtifact.getUrl());
                     long size = natArtifact.getSize();
@@ -1501,7 +1501,7 @@ public class ProtoLauncher {
             Path file = Paths.get(destination.toString(), entry.getName());
 
             // If the native already exists, ignore it and continue on
-            if (Files.exists(file)) {
+            if (Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
                 continue;
             }
 
@@ -1528,7 +1528,7 @@ public class ProtoLauncher {
             }
 
             // Copy native to destination
-            Files.copy(jar.getInputStream(entry), file);
+            Files.copy(jar.getInputStream(entry), file, LinkOption.NOFOLLOW_LINKS);
         }
 
         // Close jar file
@@ -1557,7 +1557,7 @@ public class ProtoLauncher {
         Path indexFile = assetsFolder.resolve("indexes/" + version.getAssetIndex().getId() + ".json");
 
         // Download the index file if it does not exist
-        if (!Files.exists(indexFile)) {
+        if (!Files.exists(indexFile, LinkOption.NOFOLLOW_LINKS)) {
             Files.createDirectories(indexFile.getParent());
             URL url = new URL(version.getAssetIndex().getUrl());
             Network.download(url, indexFile);
@@ -1599,7 +1599,7 @@ public class ProtoLauncher {
             // Download asset if it does not already exist
             String assetLocation = asset.getId() + "/" + asset.getHash();
             Path assetPath = objectsFolder.resolve(assetLocation);
-            if (!Files.exists(assetPath)) {
+            if (!Files.exists(assetPath, LinkOption.NOFOLLOW_LINKS)) {
                 Files.createDirectories(assetPath.getParent());
                 URL url = new URL(config.getEndpoints().getAssetApi() + assetLocation);
                 long size = asset.getSize();
@@ -1612,9 +1612,9 @@ public class ProtoLauncher {
             // If the asset is virtual, copy the file to the virtual location
             if (isVirtual) {
                 Path assetPathVirtual = virtualFolder.resolve(entry.getKey());
-                if (!Files.exists(assetPathVirtual)) {
+                if (!Files.exists(assetPathVirtual, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(assetPathVirtual.getParent());
-                    Files.copy(assetPath, assetPathVirtual);
+                    Files.copy(assetPath, assetPathVirtual, LinkOption.NOFOLLOW_LINKS);
                 }
             }
 
@@ -1624,9 +1624,9 @@ public class ProtoLauncher {
             // If map to resources, copy the file to the resources location
             if (mapToResources) {
                 Path assetResourcesPath = resourcesFolder.resolve(entry.getKey());
-                if (!Files.exists(assetResourcesPath)) {
+                if (!Files.exists(assetResourcesPath, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(assetResourcesPath.getParent());
-                    Files.copy(assetPath, assetResourcesPath);
+                    Files.copy(assetPath, assetResourcesPath, LinkOption.NOFOLLOW_LINKS);
                 }
             }
         }
@@ -1639,7 +1639,7 @@ public class ProtoLauncher {
         if (version.getLogging() != null) {
             Artifact artifact = version.getLogging().getClient().getFile();
             Path logFilePath = logConfigsFolder.resolve(artifact.getId());
-            if (!Files.exists(logFilePath)) {
+            if (!Files.exists(logFilePath, LinkOption.NOFOLLOW_LINKS)) {
                 Files.createDirectories(logFilePath.getParent());
                 URL url = new URL(artifact.getUrl());
                 long size = artifact.getSize();
@@ -1780,7 +1780,7 @@ public class ProtoLauncher {
             Path home = Path.of(SystemInfo.USER_HOME);
             String shortcut = "[InternetShortcut]\r\nURL=protolauncher://launch/--owner=" + profile.getOwner() + "/--uuid=" + profile.getUuid() + "\r\n";
             Path shortcutFile = home.resolve(profile.getName() + ".url");
-            Files.writeString(shortcutFile, shortcut);
+            Files.writeString(shortcutFile, shortcut, LinkOption.NOFOLLOW_LINKS);
         } else {
             logger.warn("Unable to create desktop shortcut on the following platform: " + SystemInfo.OS_NAME);
         }

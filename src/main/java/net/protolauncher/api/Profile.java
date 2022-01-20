@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
@@ -91,7 +92,7 @@ public class Profile {
     public Profile setPath(String path) throws IOException {
         // Delete the old folder if it's empty
         Path origPath = Path.of(this.path);
-        if (Files.isDirectory(origPath) && Files.list(origPath).findAny().isEmpty()) {
+        if (Files.isDirectory(origPath, LinkOption.NOFOLLOW_LINKS) && Files.list(origPath).findAny().isEmpty()) {
             Files.delete(origPath);
         }
 
@@ -131,7 +132,7 @@ public class Profile {
     public static Path getDefaultLocation(String name, String owner) throws IOException {
         Path loc = FileLocation.PROFILES_FOLDER.resolve(owner + "/" + name + "/");
         int count = 0;
-        while (Files.exists(loc)) {
+        while (Files.exists(loc, LinkOption.NOFOLLOW_LINKS)) {
             count++;
             loc = FileLocation.PROFILES_FOLDER.resolve(owner + "/" + name + "-" + count + "/");
         }
