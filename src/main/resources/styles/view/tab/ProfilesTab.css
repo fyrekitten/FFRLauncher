@@ -72,6 +72,13 @@
     -fx-pref-width: 15pt;
     -fx-max-height: 15pt;
 }
+.pt-profile-fabric-icon {
+    -fx-background-color: -fx-color-subtext;
+    -fx-min-height: 15pt;
+    -fx-pref-height: 15pt;
+    -fx-pref-width: 15pt;
+    -fx-max-height: 15pt;
+}
 .pt-profile-game-version {
     -fx-font: 14pt "Raleway";
 }

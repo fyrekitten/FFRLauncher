@@ -13,6 +13,7 @@ import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
+import net.protolauncher.mods.version.ModdedVersionType;
 import net.protolauncher.mojang.version.VersionType;
 import net.protolauncher.ui.ViewScene;
 import net.protolauncher.ui.components.PLScrollPane;
@@ -140,6 +141,16 @@ public class ProfilesTab extends AbstractView<Pane> {
             regGlobalIcon.getStyleClass().add("pt-profile-globe-icon");
         }
 
+        // Fabric Icon
+        Region regFabricIcon = null;
+        if (profile.getVersion().getModdedType() == ModdedVersionType.FABRIC) {
+            SVGPath svgFabricIcon = new SVGPath();
+            svgFabricIcon.setContent("M962.5926,1750.866c-31.7789,31.783-39.092,78.1677-15.9652,101.2945,23.1227,23.1269,69.5033,15.81,101.29-15.9692,18.1231-18.1272,28.81-40.9306,29.5883-62.4563l-68.8891-68.8892-46.02,46.02ZM1736.031,768.48c-15.0848-15.0849-36.1193-23.07-60.1838-23.07a115.8843,115.8843,0,0,0-13.4716.8026c-31.8117,3.7344-63.4145,19.8715-88.9817,45.4347-25.5632,25.5673-41.7,57.166-45.4347,88.9818-3.4764,29.6578,4.4263,55.8147,22.2669,73.6553s44.0179,25.7392,73.6512,22.2628c31.8157-3.7343,63.4145-19.8715,88.9817-45.4346,51.2247-51.2287,61.6211-124.1839,23.176-162.633h-.004ZM1538.65,756.904c33.3472-33.3431,75.2522-54.4758,118.0008-59.4918,2.5838-.3031,5.1266-.4545,7.6776-.6388l-479.98-479.98c-15.0848-15.0849-36.1194-23.0654-60.1838-23.0654a114.9366,114.9366,0,0,0-13.4716.8025c-31.8117,3.7344-63.4145,19.8716-88.9818,45.4347-51.2245,51.2287-61.6169,124.1839-23.1718,162.633l479.98,479.98c.1843-2.551.3358-5.0938.6388-7.6734,5.02-42.7445,26.1447-84.6537,59.4918-118.0008ZM981.17,454.7156l-657.3619,657.362c-31.783,31.783-39.0961,78.1676-15.9693,101.2945l578.6046,578.6047c5.2781-26.8,19.2123-53.661,41.4055-75.8542l80.7679-80.7678h0l609.0773-609.0733c-2.5182.1147-5.0324.2211-7.5137.2211-28.1757,0-54.0418-7.5055-75.588-21.841Z");
+            regFabricIcon = new Region();
+            regFabricIcon.setShape(svgFabricIcon);
+            regFabricIcon.getStyleClass().add("pt-profile-fabric-icon");
+        }
+
         // Game Version
         String gameVersionText = profile.getVersion().getMinecraft();
         if (profile.getProfileSettings().isGlobal()) {
@@ -183,6 +194,9 @@ public class ProfilesTab extends AbstractView<Pane> {
         hboxNameIconContainer.getChildren().add(lblName);
         if (regGlobalIcon != null) {
             hboxNameIconContainer.getChildren().add(regGlobalIcon);
+        }
+        if (regFabricIcon != null) {
+            hboxNameIconContainer.getChildren().add(regFabricIcon);
         }
         vboxLeftTextContainer.getChildren().addAll(hboxNameIconContainer, lblGameVersion);
         hboxLeftContainer.getChildren().addAll(ivImage, vboxLeftTextContainer);
