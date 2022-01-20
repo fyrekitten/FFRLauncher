@@ -244,8 +244,6 @@ public class ProfileInfoTab extends AbstractView<Pane> {
             txtName.setText(existingProfile.getName());
             VersionType type = existingProfile.getVersion().getType();
             cbVersionType.setValue(type);
-            cbVersion.getItems().addAll(launcher.getVersionManifest().getVersionsOfType(type));
-            cbVersion.setValue(launcher.getVersionManifest().getVersion(existingProfile.getVersion().getMinecraft()));
             if (existingProfile.getVersion().isLatest()) {
                 chkLatest.setSelected(true);
                 cbVersion.setDisable(true);
