@@ -47,7 +47,7 @@ public class VersionArguments {
         }
 
         // Merge game arguments
-        this.game += arguments.game;
+        this.game += ' ' + arguments.game;
         if (arguments.gameOriginal != null) {
             if (this.gameOriginal == null) {
                 this.gameOriginal = arguments.gameOriginal;
@@ -57,7 +57,7 @@ public class VersionArguments {
         }
 
         // Merge jvm arguments
-        this.jvm += arguments.jvm;
+        this.jvm += ' ' + arguments.jvm;
         if (arguments.jvmOriginal != null) {
             if (this.jvmOriginal == null) {
                 this.jvmOriginal = arguments.jvmOriginal;
@@ -130,7 +130,7 @@ public class VersionArguments {
                     if (args.length() > 0) {
                         args.append(' ');
                     }
-                    args.append(element.getAsString());
+                    args.append(element.getAsString().replace("= ", "=").trim());
                 }
                 // TODO: Handle options and rules
             }
@@ -164,7 +164,7 @@ public class VersionArguments {
                     if (args.length() > 0) {
                         args.append(' ');
                     }
-                    args.append(element.getAsString());
+                    args.append(element.getAsString().replace("= ", "=").trim());
                 } else {
                     JsonObject obj = element.getAsJsonObject();
 

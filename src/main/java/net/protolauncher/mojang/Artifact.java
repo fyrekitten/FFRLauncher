@@ -14,6 +14,7 @@ public class Artifact {
     private String id;
     @Nullable
     private String path;
+    @Nullable
     private String sha1;
     private long size;
     @Nullable
@@ -22,7 +23,7 @@ public class Artifact {
     private String url;
 
     // Constructor
-    public Artifact(@Nullable String id, @Nullable String path, String sha1, long size, @Nullable Long totalSize, @Nullable String url) {
+    public Artifact(@Nullable String id, @Nullable String path, @Nullable String sha1, long size, @Nullable Long totalSize, @Nullable String url) {
         this.id = id;
         this.path = path;
         this.sha1 = sha1;
@@ -40,6 +41,7 @@ public class Artifact {
     public String getPath() {
         return path;
     }
+    @Nullable
     public String getSha1() {
         return sha1;
     }

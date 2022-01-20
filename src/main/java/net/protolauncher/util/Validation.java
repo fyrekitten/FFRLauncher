@@ -1,5 +1,7 @@
 package net.protolauncher.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -23,7 +25,7 @@ public class Validation {
      * @return <code>true</code> if the file exists and matches the given sha1, otherwise <code>false</code>.
      * @throws IOException Thrown if validating the file fails, usually due to sha1 creation.
      */
-    public static boolean validate(Path path, String sha1) throws IOException {
+    public static boolean validate(@NotNull Path path, @NotNull String sha1) throws IOException {
         // Check file
         if (!Files.exists(path)) {
             return false;

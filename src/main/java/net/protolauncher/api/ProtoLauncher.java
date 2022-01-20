@@ -2,6 +2,8 @@ package net.protolauncher.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import net.protolauncher.api.Config.Endpoints;
 import net.protolauncher.api.Config.FileLocation;
@@ -12,7 +14,9 @@ import net.protolauncher.api.function.StepProgressConsumer;
 import net.protolauncher.api.gson.DurationTypeAdapter;
 import net.protolauncher.api.gson.InstantTypeAdapter;
 import net.protolauncher.log4j.FeedbackLoggerWrapper;
+import net.protolauncher.mods.version.ModdedVersionInfo;
 import net.protolauncher.mods.version.ModdedVersionManifest;
+import net.protolauncher.mods.version.ModdedVersionType;
 import net.protolauncher.mojang.Artifact;
 import net.protolauncher.mojang.asset.Asset;
 import net.protolauncher.mojang.asset.AssetIndex;
@@ -1182,6 +1186,88 @@ public class ProtoLauncher {
     }
 
     /**
+     * Injects the given modded version info into the given profile,
+     * modifies the appropriate files, modifies the version, and returns the modified version.
+     * Should be called at launch, it should not permanently modify any files.
+     *
+     * @param versionIn The version to inject the mod loader into.
+     * @param mvi The modded version info.
+     * @return The modified {@link Version}.
+     * @throws IOException Thrown if something goes wrong injecting the modloader.
+     */
+    public Version injectModLoader(Version versionIn, ModdedVersionInfo mvi, StepProgressConsumer stepProgress, DownloadProgressConsumer downloadProgress) throws IOException {
+        logger.debug("Injecting Mod Loader into " + versionIn.getId() + "...");
+
+        // Check against type
+        if (mvi.getType() == ModdedVersionType.FABRIC) {
+            return this.injectFabric(versionIn, new URL(mvi.getUrl()));
+        } else {
+            // TODO: Support more mod loaders.
+            throw new IOException("Sorry, this mod loader is not currently supported yet!");
+        }
+    }
+
+    /**
+     * Injects/combines the given fabric version with the given version
+     * and performs any modifications needed to make it compatible.
+     *
+     * @param versionIn The {@link Version} in which Fabric will be injected.
+     * @param fabricVersionUrl The URL to the "version"-equivalent file for Fabric.
+     * @throws IOException Thrown if something goes wrong downloading or injecting the version.
+     */
+    public Version injectFabric(Version versionIn, URL fabricVersionUrl) throws IOException {
+        logger.debug("Injecting Fabric...");
+
+        // Download fabric version file as an object
+        logger.debug("Fetching version...");
+        JsonObject obj = gson.fromJson(Network.stringify(Network.fetch(fabricVersionUrl)), JsonObject.class);
+
+        // Fix all libraries to be in Mojang format
+        logger.debug("Fixing Fabric craziness...");
+        JsonArray libArr = obj.getAsJsonArray("libraries");
+        for (int i = 0; i < libArr.size(); i++) {
+            JsonObject libObj = libArr.get(i).getAsJsonObject();
+
+            // Get name and url
+            String libName = libObj.get("name").getAsString();
+            String libUrl = libObj.get("url").getAsString();
+
+            // Construct actual URL
+            String[] details = libName.split(":");
+            String fullPath = details[0].replace(".", "/") + "/" + details[1].replace(":", "/") + "/" + details[2] + "/" + details[1] + "-" + details[2] + ".jar";
+            String fullUrl = libUrl + fullPath;
+
+            // Construct a new artifact
+            JsonObject downloads = new JsonObject();
+            JsonObject artifact = new JsonObject();
+            artifact.addProperty("url", fullUrl);
+            artifact.addProperty("path", fullPath);
+            downloads.add("artifact", artifact);
+            downloads.add("classifiers", null);
+
+            // Update library object
+            libObj.add("downloads", downloads);
+            libObj.add("extract", null);
+            libObj.add("natives", null);
+            libObj.add("rules", null);
+            libObj.remove("url");
+        }
+        obj.add("libraries", libArr);
+
+        // Parse the version
+        logger.debug("Parsing version...");
+        Version versionOut = gson.fromJson(obj, Version.class);
+
+        // Merge the versions
+        logger.debug("Merging version...");
+        versionOut = versionIn.merge(versionOut, true);
+
+        // Done
+        logger.debug("Injected Fabric!");
+        return versionOut;
+    }
+
+    /**
      * Downloads Java 8 for the appropriate system platform.
      *
      * @param stepProgress The progress of the 'steps' of the download (download, then extraction).
@@ -1344,7 +1430,7 @@ public class ProtoLauncher {
                 }
 
                 // Validate
-                if (config.shouldValidate() && !Validation.validate(jarPath, jarArtifact.getSha1())) {
+                if (config.shouldValidate() && jarArtifact.getSha1() != null && !Validation.validate(jarPath, jarArtifact.getSha1())) {
                     // TODO: Retry download.
                     throw new IOException("Validation failed!");
                 }
@@ -1366,7 +1452,7 @@ public class ProtoLauncher {
                 }
 
                 // Validate
-                if (config.shouldValidate() && !Validation.validate(natPath, natArtifact.getSha1())) {
+                if (config.shouldValidate() && natArtifact.getSha1() != null && !Validation.validate(natPath, natArtifact.getSha1())) {
                     // TODO: Retry download.
                     throw new IOException("Validation failed!");
                 }
@@ -1478,7 +1564,7 @@ public class ProtoLauncher {
         }
 
         // Validate
-        if (config.shouldValidate() && !Validation.validate(indexFile, version.getAssetIndex().getSha1())) {
+        if (config.shouldValidate() && version.getAssetIndex().getSha1() != null && !Validation.validate(indexFile, version.getAssetIndex().getSha1())) {
             // TODO: Retry download.
             throw new IOException("Validation failed!");
         }

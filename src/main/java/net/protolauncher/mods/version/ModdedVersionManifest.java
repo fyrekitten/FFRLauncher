@@ -58,13 +58,14 @@ public class ModdedVersionManifest {
     }
 
     /**
-     * Attempts to fetch a {@link ModdedVersionInfo} by the given Minecraft version id and loader version id from the manifest.
+     * Attempts to fetch a {@link ModdedVersionInfo} of the given type by the given Minecraft version id and loader version id from the manifest.
+     * @param type The type to filter by.
      * @param mcv The Minecraft version id of the {@link ModdedVersionInfo} to fetch.
      * @param lv The loader version id of the {@link ModdedVersionInfo} to fetch.
      * @return A {@link ModdedVersionInfo} or null if not found.
      */
-    public ModdedVersionInfo getVersion(String mcv, String lv) {
-        return versions.stream().filter(x -> x.mcv.equals(mcv) && x.lv.equals(lv)).findFirst().orElse(null);
+    public ModdedVersionInfo getVersion(ModdedVersionType type, String mcv, String lv) {
+        return versions.stream().filter(x -> x.type == type && x.mcv.equals(mcv) && x.lv.equals(lv)).findFirst().orElse(null);
     }
 
 }

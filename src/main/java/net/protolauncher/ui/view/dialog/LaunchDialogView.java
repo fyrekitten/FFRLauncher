@@ -11,6 +11,7 @@ import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.log4j.FeedbackLoggerWrapper;
 import net.protolauncher.log4j.ILogListener;
+import net.protolauncher.mods.version.ModdedVersionInfo;
 import net.protolauncher.mojang.asset.AssetIndex;
 import net.protolauncher.mojang.library.Library;
 import net.protolauncher.mojang.version.Version;
@@ -40,7 +41,7 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
 
     // Variables
     private double currentStep = 0.0;
-    private final double totalSteps = 5.0;
+    private final double totalSteps = 6.0;
     private boolean launching = false;
     private Version version;
     private Path javaPath = null;
@@ -147,7 +148,12 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         // Handle success
         downloadVersionTask.setOnSucceeded(event -> {
             version = downloadVersionTask.getValue();
-            this.internal_launchTask_downloadJava();
+            if (profile.getVersion().getModdedType() != null) {
+                this.internal_launchTask_injectModLoader();
+            } else {
+                ++currentStep; // account for missing modloader step
+                this.internal_launchTask_downloadJava();
+            }
         });
 
         // Handle failure
@@ -162,6 +168,53 @@ public class LaunchDialogView extends AbstractView<VBox> implements ILogListener
         // Run the download version thread
         Thread downloadVersionThread = new Thread(downloadVersionTask);
         downloadVersionThread.setName("Download Version Task");
+        downloadVersionThread.start();
+    }
+
+    /**
+     * Task 1.5: Inject Mod Loader.
+     */
+    private void internal_launchTask_injectModLoader() {
+        LOGGER.info("Launch Task: Inject Mod Loader.");
+        pgbProgressBar1.setProgress(++currentStep / totalSteps);
+
+        // Inject Mod Loader Task
+        LauncherTask<Version> injectModLoaderTask = new LauncherTask<>() {
+            @Override
+            protected Version call() throws Exception {
+                // Fetch version info
+                ModdedVersionInfo mvi = Objects.requireNonNull(launcher.getModdedVersionManifest()).getVersion(profile.getVersion().getModdedType(), profile.getVersion().getMinecraft(), profile.getVersion().getModded());
+                if (mvi == null) {
+                    throw new Exception("The requested modded version info does not exist in the modded version manifest!");
+                }
+
+                // Inject
+                return launcher.injectModLoader(version, mvi, (totalSteps1, currentStep1) -> {
+                    this.updateProgress(currentStep1, totalSteps1);
+                }, (total, transferred) -> {
+                    this.updateProgress2(transferred, total);
+                });
+            }
+        };
+
+        // Handle success
+        injectModLoaderTask.setOnSucceeded(event -> {
+            version = injectModLoaderTask.getValue();
+            this.internal_launchTask_downloadJava();
+        });
+
+        // Handle failure
+        injectModLoaderTask.setOnFailed(event -> this.internal_launchFailed(injectModLoaderTask.getException()));
+
+        // Handle progress updates
+        injectModLoaderTask.setProgressHandler(progress -> {
+            pgbProgressBar2.setProgress(progress.getWorkDone() / progress.getMax());
+            pgbProgressBar1.setProgress((Math.floor(pgbProgressBar1.getProgress() * 10) / 10.0) + pgbProgressBar2.getProgress() / 10);
+        });
+
+        // Run the download version thread
+        Thread downloadVersionThread = new Thread(injectModLoaderTask);
+        downloadVersionThread.setName("Inject Mod Loader Task");
         downloadVersionThread.start();
     }
 
