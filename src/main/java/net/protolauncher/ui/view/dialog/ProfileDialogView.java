@@ -115,6 +115,18 @@ public class ProfileDialogView extends AbstractView<BorderPane> {
                     ver.setLatest(pit.getLatest().isSelected());
                     finalProfile.setVersion(ver);
                 }
+                if (finalProfile.getVersion().getModdedType() != null && !pit.getInjectFabric().isSelected() || (pit.getInjectFabric().isSelected() && pit.getFabricVersion() == null)) {
+                    if (pit.getFabricVersion() == null) {
+                        LOGGER.warn("Inject fabric was selected but no compatible fabric version was found!");
+                    }
+                    Version ver = finalProfile.getVersion();
+                    ver.setModdedVersion(null);
+                    finalProfile.setVersion(ver);
+                } else if (!Objects.equals(finalProfile.getVersion().getModded(), pit.getFabricVersion().getLv())) {
+                    Version ver = finalProfile.getVersion();
+                    ver.setModdedVersion(pit.getFabricVersion());
+                    finalProfile.setVersion(ver);
+                }
 
                 ProfileSettingsTab pst = (ProfileSettingsTab) atvTabs.getTab("profile-settings");
                 if (finalProfile.getProfileSettings().isGlobal() != pst.getGlobal().isSelected()) {

@@ -3,32 +3,40 @@ package net.protolauncher.ui.view.tab.dialog;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import net.protolauncher.App;
 import net.protolauncher.api.Profile;
 import net.protolauncher.api.ProtoLauncher;
+import net.protolauncher.mods.version.ModdedVersionInfo;
+import net.protolauncher.mods.version.ModdedVersionType;
 import net.protolauncher.mojang.version.VersionInfo;
 import net.protolauncher.mojang.version.VersionType;
+import net.protolauncher.ui.components.PLScrollPane;
 import net.protolauncher.ui.dialog.ProfileDialog;
 import net.protolauncher.ui.view.AbstractView;
 
-public class ProfileInfoTab extends AbstractView<VBox> {
+public class ProfileInfoTab extends AbstractView<Pane> {
 
     // References
     private final ProfileDialog dialog;
     private final ProtoLauncher launcher;
 
     // Components
+    private PLScrollPane spScrollContainer;
+    private VBox vboxContainer;
     private VBox vboxNameContainer;
     private Label lblName;
     private TextField txtName;
     private VBox vboxVersionContainer;
     private Label lblVersion;
-    private CheckBox chkLatest;
     private HBox hboxVersionHorizontalContainer;
     private ComboBox<VersionInfo> cbVersion;
     private ComboBox<VersionType> cbVersionType;
+    private CheckBox chkLatest;
+    private CheckBox chkInjectFabric;
+    private ComboBox<ModdedVersionInfo> cbFabricVersion;
 
     // Constructor
     public ProfileInfoTab(ProfileDialog dialog) {
@@ -50,10 +58,26 @@ public class ProfileInfoTab extends AbstractView<VBox> {
     public CheckBox getLatest() {
         return chkLatest;
     }
+    public CheckBox getInjectFabric() {
+        return chkInjectFabric;
+    }
+    public ModdedVersionInfo getFabricVersion() {
+        return cbFabricVersion.getValue();
+    }
 
     // AbstractView Implementation
     @Override
     protected void construct() {
+        // Scroll Container
+        spScrollContainer = new PLScrollPane(2);
+        spScrollContainer.setId("pit-scroll-container");
+        spScrollContainer.prefWidthProperty().bind(this.getLayout().widthProperty());
+        spScrollContainer.prefHeightProperty().bind(this.getLayout().heightProperty());
+
+        // Container
+        vboxContainer = new VBox();
+        vboxContainer.setId("pit-container");
+
         // Name Option
         vboxNameContainer = new VBox();
         vboxNameContainer.setId("pit-name-container");
@@ -115,6 +139,15 @@ public class ProfileInfoTab extends AbstractView<VBox> {
                 cbVersion.show();
             }
         });
+        cbVersion.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (oldValue != newValue && newValue != null && newValue.getType() == VersionType.RELEASE) {
+                cbFabricVersion.getItems().clear();
+                cbFabricVersion.getItems().addAll(launcher.getModdedVersionManifest().getVersionsOfTypeWithMcv(ModdedVersionType.FABRIC, newValue.getId()));
+                if (cbFabricVersion.getItems().size() > 0) {
+                    cbFabricVersion.setValue(cbFabricVersion.getItems().get(0));
+                }
+            }
+        });
 
         // Version Type ChoiceBox
         cbVersionType = new ComboBox<>();
@@ -143,6 +176,12 @@ public class ProfileInfoTab extends AbstractView<VBox> {
                 cbVersion.getItems().clear();
                 cbVersion.getItems().addAll(launcher.getVersionManifest().getVersionsOfType(newValue));
                 cbVersion.setValue(cbVersion.getItems().get(0));
+                if (newValue != VersionType.RELEASE) {
+                    chkInjectFabric.setSelected(false);
+                    chkInjectFabric.setDisable(true);
+                } else {
+                    chkInjectFabric.setDisable(false);
+                }
             }
         });
 
@@ -159,6 +198,46 @@ public class ProfileInfoTab extends AbstractView<VBox> {
             }
         });
 
+        // Inject Fabric Checkbox
+        chkInjectFabric = new CheckBox("Inject Fabric");
+        chkInjectFabric.setId("pit-inject-fabric");
+        chkInjectFabric.setTooltip(new Tooltip("Whether to inject the Fabric Mod Loader to this profile or not."));
+        chkInjectFabric.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                chkLatest.setSelected(false);
+                chkLatest.setDisable(true);
+                cbFabricVersion.setDisable(false);
+            } else {
+                chkLatest.setDisable(false);
+                cbFabricVersion.setDisable(true);
+            }
+        });
+
+        // Fabric Version Type ComboBox
+        cbFabricVersion = new ComboBox<>();
+        cbFabricVersion.setId("pt-fabric-version-type");
+        cbFabricVersion.setTooltip(new Tooltip("The Fabric version that should be injected."));
+        cbFabricVersion.prefWidthProperty().bind(hboxVersionHorizontalContainer.widthProperty());
+        cbFabricVersion.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(ModdedVersionInfo object) {
+                if (object == null) {
+                    return null;
+                }
+                return "Fabric " + object.getLv();
+            }
+
+            @Override
+            public ModdedVersionInfo fromString(String string) {
+                return null;
+            }
+        });
+        cbFabricVersion.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.SPACE && cbFabricVersion.isFocused()) {
+                cbFabricVersion.show();
+            }
+        });
+
         // Check for an existing profile and apply autofills
         Profile existingProfile = (Profile) this.dialog.getUserData();
         if (existingProfile != null) {
@@ -171,21 +250,31 @@ public class ProfileInfoTab extends AbstractView<VBox> {
                 chkLatest.setSelected(true);
                 cbVersion.setDisable(true);
             }
+            ModdedVersionType moddedType = existingProfile.getVersion().getModdedType();
+            if (moddedType == null) {
+                cbFabricVersion.setDisable(true);
+            } else if (moddedType == ModdedVersionType.FABRIC) {
+                chkInjectFabric.setSelected(true);
+            }
         } else {
             txtName.setText("New Profile");
             cbVersionType.setValue(VersionType.RELEASE);
             cbVersion.getItems().addAll(launcher.getVersionManifest().getVersionsOfType(VersionType.RELEASE));
             cbVersion.setValue(launcher.getVersionManifest().getLatestRelease());
+            cbFabricVersion.setDisable(true);
         }
     }
 
     @Override
     protected void register() {
-        VBox layout = this.getLayout();
+        Pane layout = this.getLayout();
         vboxNameContainer.getChildren().addAll(lblName, txtName);
         hboxVersionHorizontalContainer.getChildren().addAll(cbVersion, cbVersionType);
-        vboxVersionContainer.getChildren().addAll(lblVersion, hboxVersionHorizontalContainer, chkLatest);
-        layout.getChildren().addAll(vboxNameContainer, vboxVersionContainer);
+        vboxVersionContainer.getChildren().addAll(lblVersion, hboxVersionHorizontalContainer, chkLatest, chkInjectFabric, cbFabricVersion);
+        vboxContainer.getChildren().addAll(vboxNameContainer, vboxVersionContainer);
+        spScrollContainer.setContent(vboxContainer);
+        spScrollContainer.applyScrollMultiplier();
+        layout.getChildren().add(spScrollContainer);
     }
 
 }

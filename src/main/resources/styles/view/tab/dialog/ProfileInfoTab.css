@@ -1,5 +1,9 @@
-/* Layout */
-#pit-layout {
+/* Containers */
+#pit-scroll-container {
+    -fx-fit-to-width: true;
+    -fx-fill-height: true;
+}
+#pit-container {
     -fx-padding: 20px;
     -fx-spacing: 10px;
 }
@@ -10,4 +14,7 @@
 }
 #pit-latest {
     -fx-padding: 10px 0 0 2px;
+}
+#pit-inject-fabric {
+    -fx-padding: 10px 0 10px 2px;
 }
