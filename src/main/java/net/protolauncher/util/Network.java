@@ -9,10 +9,7 @@ import java.net.Inet4Address;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.function.Consumer;
 
 /**
@@ -138,7 +135,7 @@ public class Network {
 
         // Fetch streams
         InputStream in = fetch(url);
-        OutputStream out = Files.newOutputStream(path, LinkOption.NOFOLLOW_LINKS);
+        OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
 
         // Perform transfer (equivalent to InputStream#transferTo)
         long transferred = 0;

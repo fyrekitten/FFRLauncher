@@ -210,7 +210,7 @@ public class ProtoLauncher {
     public void saveConfig() throws IOException {
         logger.debug("Saving configuration...");
         Path path = FileLocation.CONFIG;
-        Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
+        Files.writeString(path, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Configuration saved.");
     }
 
@@ -243,7 +243,7 @@ public class ProtoLauncher {
     public void saveUsers() throws IOException {
         logger.debug("Saving users...");
         Path path = FileLocation.USERS;
-        Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
+        Files.writeString(path, gson.toJson(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Users saved.");
     }
 
@@ -711,7 +711,7 @@ public class ProtoLauncher {
     public void saveProfiles() throws IOException {
         logger.debug("Saving profiles...");
         Path path = FileLocation.PROFILES;
-        Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
+        Files.writeString(path, gson.toJson(profiles), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
         logger.debug("Profiles saved.");
     }
 
@@ -1780,7 +1780,7 @@ public class ProtoLauncher {
             Path home = Path.of(SystemInfo.USER_HOME);
             String shortcut = "[InternetShortcut]\r\nURL=protolauncher://launch/--owner=" + profile.getOwner() + "/--uuid=" + profile.getUuid() + "\r\n";
             Path shortcutFile = home.resolve(profile.getName() + ".url");
-            Files.writeString(shortcutFile, shortcut, LinkOption.NOFOLLOW_LINKS);
+            Files.writeString(shortcutFile, shortcut, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
         } else {
             logger.warn("Unable to create desktop shortcut on the following platform: " + SystemInfo.OS_NAME);
         }

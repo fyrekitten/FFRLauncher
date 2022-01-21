@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -53,7 +54,7 @@ public class Validation {
             System.exit(1);
             return null;
         }
-        InputStream fis = Files.newInputStream(path, LinkOption.NOFOLLOW_LINKS);
+        InputStream fis = Files.newInputStream(path, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS);
         int n = 0;
         byte[] buffer = new byte[8192];
         while (n != -1) {
