@@ -1,11 +1,14 @@
 package net.protolauncher;
 
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import net.protolauncher.api.ProtoLauncher;
 import net.protolauncher.api.User;
 import net.protolauncher.log4j.FeedbackLoggerWrapper;
@@ -165,17 +168,26 @@ public class App extends Application {
 
                 // Set the scene to the main view
                 scene.addView(new MainView());
-                scene.removeView(initializingView);
 
-                // If this is the first launch, now that we are showing the view, we can set it to false
-                if (launcher.getConfig().isFirstLaunch()) {
-                    launcher.getConfig().setFirstLaunch(false);
-                    try {
-                        launcher.saveConfig();
-                    } catch (IOException e) {
-                        this.severeInternalError(e);
+                // Fade out initializing view
+                FadeTransition animation = new FadeTransition(Duration.millis(200), initializingView.getLayout());
+                animation.setInterpolator(Interpolator.EASE_BOTH);
+                animation.setFromValue(1.0);
+                animation.setToValue(0.0);
+                animation.setOnFinished(event2 -> {
+                    scene.removeView(initializingView);
+
+                    // If this is the first launch, now that we are showing the view, we can set it to false
+                    if (launcher.getConfig().isFirstLaunch()) {
+                        launcher.getConfig().setFirstLaunch(false);
+                        try {
+                            launcher.saveConfig();
+                        } catch (IOException e) {
+                            this.severeInternalError(e);
+                        }
                     }
-                }
+                });
+                animation.play();
             });
 
             // Handle failure

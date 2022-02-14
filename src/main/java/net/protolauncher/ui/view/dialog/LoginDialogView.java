@@ -49,7 +49,7 @@ public class LoginDialogView extends AbstractView<HBox> {
     @Override
     protected void register() {
         HBox layout = this.getLayout();
-        vboxContainer.getChildren().addAll(btnMojang, btnMicrosoft);
+        vboxContainer.getChildren().addAll(btnMicrosoft, btnMojang);
         layout.getChildren().add(vboxContainer);
     }
 
