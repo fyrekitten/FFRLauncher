@@ -38,7 +38,7 @@
     -fx-text-fill: -fx-color-text;
     -fx-highlight-fill: -fx-color-background-light;
     -fx-background-color: -fx-color-background-dark;
-    -fx-font: 14pt "Raleway Medium";
+    -fx-font: 14pt "Open Sans";
     -fx-border-insets: 0;
     -fx-background-radius: 0;
 }
@@ -254,6 +254,9 @@
     -fx-background-radius: 0;
     -fx-max-width: 9999999;
     -fx-padding: 4px 20px;
+}
+.plb-button Label {
+    -fx-padding: -1pt 0;
 }
 .plb-button:hover {
     -fx-cursor: hand;

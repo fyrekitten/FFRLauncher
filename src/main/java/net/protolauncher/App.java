@@ -104,10 +104,12 @@ public class App extends Application {
             this.loadFont("Roboto-Light.ttf");
             this.loadFont("Roboto-Bold.ttf");
 
-            // Create main scene, set the view to a new loading view, set it to the stage, and show it
+            // Create main scene, set the view to a new loading view
             ViewScene scene = new ViewScene();
             InitializingView initializingView = new InitializingView();
             scene.addView(initializingView);
+
+            // Set the scene and show the stage
             this.stage.setScene(scene);
             this.stage.show();
 
