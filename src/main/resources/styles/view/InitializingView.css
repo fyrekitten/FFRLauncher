@@ -19,5 +19,6 @@
     -fx-padding: 5px;
 }
 #iv-logs-container Label {
-    -fx-font: 12pt "Raleway";
+    -fx-font: 12pt "Open Sans";
+    -fx-padding: -1pt 0;
 }

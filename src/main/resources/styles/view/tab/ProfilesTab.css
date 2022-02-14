@@ -63,7 +63,7 @@
     -fx-alignment: center-left;
 }
 .pt-profile-name {
-    -fx-font: 19pt "Raleway Medium";
+    -fx-font: 19pt "Open Sans Medium";
 }
 .pt-profile-globe-icon {
     -fx-background-color: -fx-color-subtext;
@@ -80,7 +80,7 @@
     -fx-max-height: 15pt;
 }
 .pt-profile-game-version {
-    -fx-font: 14pt "Raleway";
+    -fx-font: 14pt "Open Sans";
 }
 .pt-profile-right-container {
     -fx-alignment: center-right;

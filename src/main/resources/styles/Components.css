@@ -3,17 +3,11 @@
     -fx-background-color: -fx-color-background;
 }
 
-/* Text */
-.text {
-    -fx-font-smoothing-type: gray;
-}
-
 /* Labels */
 .label,
 .radio-button,
 .check-box,
 .button {
-    -fx-font-smoothing-type: gray;
     -fx-text-fill: -fx-color-text;
     -fx-font: 15pt "Raleway Medium";
 }
@@ -86,7 +80,7 @@
     -fx-background-color: transparent;
     -fx-text-fill: -fx-color-text;
     -fx-highlight-fill: -fx-color-background-light;
-    -fx-font: 10pt "Raleway Medium";
+    -fx-font: 10pt "Open Sans Medium";
 }
 .text-area .content {
     -fx-background-color: -fx-color-background;
@@ -196,7 +190,7 @@
     -fx-pref-height: 55px;
     -fx-padding: 0 16px;
     -fx-alignment: center;
-    -fx-font: 18pt "Raleway";
+    -fx-font: 18pt "Open Sans";
 }
 
 /* Combo Boxes */
@@ -217,7 +211,7 @@
 .combo-box .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-color-text;
-    -fx-font: 14pt "Raleway Medium";
+    -fx-font: 14pt "Open Sans Medium";
     -fx-border-insets: 0;
     -fx-background-radius: 0;
 }
@@ -235,13 +229,13 @@
 /* Tooltips */
 .tooltip {
     -fx-padding: 5px 10px;
-    -fx-font: 12pt "Raleway Medium";
+    -fx-font: 12pt "Open Sans Medium";
     -fx-show-delay: 250ms;
 }
 
 /* Options */
 .option > Label {
-    -fx-font: 16pt "Raleway";
+    -fx-font: 16pt "Open Sans";
     -fx-padding: 0 0 4px 2px;
     -fx-pref-width: Infinity;
     -fx-border-width: 0 0 3px 0;
@@ -254,7 +248,7 @@
     -fx-border-color: black;
 }
 .plb-button {
-    -fx-font: 13pt "Raleway Semibold";
+    -fx-font: 13pt "Open Sans Semibold";
     -fx-background-color: -fx-color-theme;
     -fx-background-insets: 0;
     -fx-background-radius: 0;

@@ -28,9 +28,6 @@
     -fx-padding: 0 0 10px 0;
 }
 #mv-attribution {
-    -fx-font: 8pt "Raleway";
+    -fx-font: 8pt "Open Sans";
     -fx-text-fill: -fx-color-subtext;
-}
-#mv-attribution .text {
-    -fx-font-smoothing-type: lcd;
 }

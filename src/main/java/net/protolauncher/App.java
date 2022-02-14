@@ -79,6 +79,8 @@ public class App extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
+        System.setProperty("awt.useSystemAAFontSettings","on");
+        System.setProperty("prism.lcdtext", "false");
         Platform.setImplicitExit(true);
         SvgImageLoaderFactory.install();
         try {
@@ -95,10 +97,10 @@ public class App extends Application {
             this.stage.getIcons().add(new Image(this.getRequiredResourceAsStream("icon.png")));
 
             // Load fonts
-            this.loadFont("Raleway-Regular.ttf");
-            this.loadFont("Raleway-Medium.ttf");
-            this.loadFont("Raleway-SemiBold.ttf");
-            this.loadFont("Raleway-Bold.ttf");
+            this.loadFont("OpenSans-Regular.ttf");
+            this.loadFont("OpenSans-Medium.ttf");
+            this.loadFont("OpenSans-SemiBold.ttf");
+            this.loadFont("OpenSans-Bold.ttf");
             this.loadFont("Roboto-Light.ttf");
             this.loadFont("Roboto-Bold.ttf");
 

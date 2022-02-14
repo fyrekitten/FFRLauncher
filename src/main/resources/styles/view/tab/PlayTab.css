@@ -17,18 +17,18 @@
 }
 #plt-btn-play .plpb-top-label,
 #plt-btn-play .plb-button {
-    -fx-font: 21pt "Raleway Bold";
+    -fx-font: 21pt "Open Sans Bold";
 }
 #plt-btn-play .plpb-bottom-label {
-    -fx-font: 15pt "Raleway SemiBold";
+    -fx-font: 15pt "Open Sans SemiBold";
 }
 #plt-btn-test .plpb-top-label,
 #plt-btn-mod .plpb-top-label,
 #plt-btn-test .plb-button,
 #plt-btn-mod .plb-button {
-    -fx-font: 16pt "Raleway Bold";
+    -fx-font: 16pt "Open Sans Bold";
 }
 #plt-btn-test .plpb-bottom-label,
 #plt-btn-mod .plpb-bottom-label {
-    -fx-font: 12pt "Raleway SemiBold";
+    -fx-font: 12pt "Open Sans SemiBold";
 }
