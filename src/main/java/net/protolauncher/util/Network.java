@@ -158,7 +158,7 @@ public class Network {
      * @see Network#fetch(URL)
      */
     public static void download(URL url, Path path) throws IOException {
-        Files.copy(fetch(url), path, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS);
+        Files.copy(fetch(url), path, StandardCopyOption.REPLACE_EXISTING);
     }
 
     /**

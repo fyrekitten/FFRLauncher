@@ -1331,7 +1331,7 @@ public class ProtoLauncher {
                 Path tarPath = folder.resolve("jre-1.8.tar");
                 if (!Files.exists(tarPath, LinkOption.NOFOLLOW_LINKS)) {
                     GZIPInputStream gzipInputStream = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(compressedFile, LinkOption.NOFOLLOW_LINKS)));
-                    Files.copy(gzipInputStream, tarPath, LinkOption.NOFOLLOW_LINKS);
+                    Files.copy(gzipInputStream, tarPath, StandardCopyOption.REPLACE_EXISTING);
                     gzipInputStream.close();
                 }
 
@@ -1351,7 +1351,7 @@ public class ProtoLauncher {
                 Path entryPath = folder.resolve(path);
                 if (!entry.isDirectory()) {
                     Files.createDirectories(entryPath.getParent());
-                    Files.copy(archive, entryPath, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS);
+                    Files.copy(archive, entryPath, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
 
@@ -1528,7 +1528,7 @@ public class ProtoLauncher {
             }
 
             // Copy native to destination
-            Files.copy(jar.getInputStream(entry), file, LinkOption.NOFOLLOW_LINKS);
+            Files.copy(jar.getInputStream(entry), file, StandardCopyOption.REPLACE_EXISTING);
         }
 
         // Close jar file
@@ -1614,7 +1614,7 @@ public class ProtoLauncher {
                 Path assetPathVirtual = virtualFolder.resolve(entry.getKey());
                 if (!Files.exists(assetPathVirtual, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(assetPathVirtual.getParent());
-                    Files.copy(assetPath, assetPathVirtual, LinkOption.NOFOLLOW_LINKS);
+                    Files.copy(assetPath, assetPathVirtual, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
 
@@ -1626,7 +1626,7 @@ public class ProtoLauncher {
                 Path assetResourcesPath = resourcesFolder.resolve(entry.getKey());
                 if (!Files.exists(assetResourcesPath, LinkOption.NOFOLLOW_LINKS)) {
                     Files.createDirectories(assetResourcesPath.getParent());
-                    Files.copy(assetPath, assetResourcesPath, LinkOption.NOFOLLOW_LINKS);
+                    Files.copy(assetPath, assetResourcesPath, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         }
